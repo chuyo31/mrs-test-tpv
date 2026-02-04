@@ -1,5 +1,4 @@
 import { db } from "./firebase.js";
-
 import {
   doc,
   getDoc
@@ -21,15 +20,26 @@ async function cargarFactura() {
   const v = snap.data();
 
   /* =========================
+     VALIDACIÓN
+  ========================= */
+
+  if (!v.numero_legal || !v.numero_legal.startsWith("FAC")) {
+    alert("Esta venta no tiene factura generada");
+    window.close();
+    return;
+  }
+
+  /* =========================
      DATOS GENERALES
   ========================= */
 
   document.getElementById("factura-numero").innerText =
-    v.numero_legal ||
-    `FAC-${new Date().getFullYear()}-${String(v.ticket_numero).padStart(6, "0")}`;
+    v.numero_legal;
 
   document.getElementById("factura-fecha").innerText =
-    v.fecha?.toDate().toLocaleDateString() || "";
+    v.fecha
+      ? v.fecha.toDate().toLocaleDateString()
+      : "";
 
   document.getElementById("subtotal").innerText =
     v.subtotal.toFixed(2) + " €";
@@ -57,28 +67,21 @@ async function cargarFactura() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${l.nombre}</td>
-      <td>${l.cantidad}</td>
-      <td>${l.precio.toFixed(2)} €</td>
-      <td>${l.base.toFixed(2)} €</td>
+      <td class="right">${l.cantidad}</td>
+      <td class="right">${l.precio.toFixed(2)} €</td>
+      <td class="right">${l.base.toFixed(2)} €</td>
     `;
     tbody.appendChild(tr);
   });
 
   /* =========================
-     IMPRIMIR + CIERRE SEGURO
+     IMPRIMIR Y CERRAR
   ========================= */
 
-  // 1️⃣ Cierre clásico
   window.onafterprint = () => {
     window.close();
   };
 
-  // 2️⃣ Cierre de respaldo (Chrome / Edge)
-  window.onfocus = () => {
-    setTimeout(() => window.close(), 300);
-  };
-
-  // Esperar a que el DOM pinte todo
   setTimeout(() => {
     window.print();
   }, 400);

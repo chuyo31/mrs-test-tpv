@@ -1,12 +1,10 @@
 import { db, auth } from "./firebase.js";
-
 import {
   collection,
   getDocs,
   query,
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -42,7 +40,7 @@ async function cargarVentas() {
       ? v.fecha.toDate().toLocaleString()
       : "";
 
-    const numero = v.numero_legal || `TCK-${String(v.ticket_numero).padStart(4, "0")}`;
+    const numero = v.numero_legal || "—";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -52,7 +50,11 @@ async function cargarVentas() {
       <td>${v.metodo_pago}</td>
       <td>
         <button onclick="reimprimirTicket('${docSnap.id}')">🧾 Ticket</button>
-        <button onclick="imprimirFactura('${docSnap.id}')">📄 Factura</button>
+        ${
+          v.numero_legal?.startsWith("FAC")
+            ? `<button onclick="imprimirFactura('${docSnap.id}')">📄 Factura</button>`
+            : ""
+        }
       </td>
     `;
 

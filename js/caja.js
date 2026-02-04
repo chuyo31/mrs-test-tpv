@@ -1,7 +1,6 @@
 import { db } from "./firebase.js";
 
 import {
-  getFirestore,
   collection,
   getDocs,
   addDoc,
@@ -12,17 +11,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { generarNumeroLegal } from "./numeracion.js";
-
-/* 🔧 FIREBASE */
-const firebaseConfig = {
-  apiKey: "AIzaSyBqnNgjPsEhxCX2kxvW4OUjLme0IqG8pTQ",
-  authDomain: "mrs-test-tpv.firebaseapp.com",
-  projectId: "mrs-test-tpv",
-  storageBucket: "mrs-test-tpv.appspot.com",
-  messagingSenderId: "912692824915",
-  appId: "1:912692824915:web:9d79acbbc7bcaf3cdb6fa6"
-};
-
 
 /* =========================
    ESTADO GLOBAL
@@ -45,6 +33,7 @@ async function comprobarCajaAbierta() {
   );
 
   const snap = await getDocs(q);
+
   const abrir = document.getElementById("abrir-caja");
   const zona = document.getElementById("zona-caja");
 
@@ -122,11 +111,15 @@ async function cargarProductos(categoryId) {
 ========================= */
 
 function añadirProducto(id, producto) {
-  if (!cajaActualId) return alert("Debes abrir la caja");
+  if (!cajaActualId) {
+    alert("Debes abrir la caja");
+    return;
+  }
 
   const item = ventaActual.find(i => i.id === id);
-  if (item) item.cantidad++;
-  else {
+  if (item) {
+    item.cantidad++;
+  } else {
     ventaActual.push({
       id,
       nombre: producto.nombre,
@@ -153,7 +146,8 @@ function cambiarPrecio(id, nuevoPrecio) {
 
 function aumentarCantidad(id) {
   const item = ventaActual.find(i => i.id === id);
-  if (item) item.cantidad++;
+  if (!item) return;
+  item.cantidad++;
   renderVenta();
   calcularCambio();
 }
@@ -164,8 +158,15 @@ function disminuirCantidad(id) {
 
   item.cantidad--;
   if (item.cantidad <= 0) {
-    ventaActual = ventaActual.filter(i => i.id !== id);
+    eliminarLinea(id);
+  } else {
+    renderVenta();
+    calcularCambio();
   }
+}
+
+function eliminarLinea(id) {
+  ventaActual = ventaActual.filter(i => i.id !== id);
   renderVenta();
   calcularCambio();
 }
@@ -176,6 +177,7 @@ function disminuirCantidad(id) {
 
 window.seleccionarPago = function (tipo) {
   metodoPago = tipo;
+
   document.getElementById("pago-seleccionado").innerText =
     tipo === "efectivo" ? "Efectivo" : "Tarjeta";
 
@@ -205,6 +207,7 @@ function calcularCambio() {
 ========================= */
 
 window.guardarVenta = async function () {
+  if (!cajaActualId) return alert("Caja no abierta");
   if (!ventaActual.length) return alert("No hay productos");
   if (!metodoPago) return alert("Selecciona forma de pago");
 
@@ -287,7 +290,9 @@ function renderVenta() {
             onchange="cambiarPrecio('${i.id}', this.value)"> €
         </td>
         <td>${base.toFixed(2)} €</td>
-        <td><button onclick="eliminarLinea('${i.id}')">🗑️</button></td>
+        <td>
+          <button onclick="eliminarLinea('${i.id}')">🗑️</button>
+        </td>
       </tr>
     `;
   });
@@ -306,7 +311,7 @@ function renderVenta() {
 window.cambiarPrecio = cambiarPrecio;
 window.aumentarCantidad = aumentarCantidad;
 window.disminuirCantidad = disminuirCantidad;
-window.eliminarLinea = disminuirCantidad;
+window.eliminarLinea = eliminarLinea;
 window.calcularCambio = calcularCambio;
 
 /* =========================

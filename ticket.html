@@ -43,7 +43,6 @@
 <body>
 
   <div class="center">
-    <!-- LOGO (lo cargarás desde config más adelante) -->
     <strong id="empresa-nombre">TU EMPRESA</strong><br>
     <span id="empresa-datos"></span>
   </div>
@@ -57,20 +56,35 @@
 
   <hr>
 
-  <table id="lineas"></table>
-
-  <hr>
-
+  <!-- 🔧 TABLA CORRECTA -->
   <table>
-    <tr><td>Subtotal</td><td class="right" id="subtotal"></td></tr>
-    <tr><td>IVA</td><td class="right" id="iva"></td></tr>
-    <tr><td>Recargo</td><td class="right" id="recargo"></td></tr>
-    <tr class="total"><td>TOTAL</td><td class="right" id="total"></td></tr>
+    <tbody id="lineas"></tbody>
   </table>
 
   <hr>
 
-  <div>
+  <table>
+    <tr>
+      <td>Subtotal</td>
+      <td class="right" id="subtotal"></td>
+    </tr>
+    <tr>
+      <td>IVA</td>
+      <td class="right" id="iva"></td>
+    </tr>
+    <tr>
+      <td>Recargo</td>
+      <td class="right" id="recargo"></td>
+    </tr>
+    <tr class="total">
+      <td>TOTAL</td>
+      <td class="right" id="total"></td>
+    </tr>
+  </table>
+
+  <hr>
+
+  <div id="bloque-efectivo">
     Pago: <span id="metodo-pago"></span><br>
     Entregado: <span id="entregado"></span><br>
     Cambio: <span id="cambio"></span>
@@ -83,18 +97,8 @@
     Gracias por su visita
   </div>
 
+  <!-- ✅ SOLO ESTE SCRIPT -->
   <script src="js/ticket.js" type="module"></script>
-
-
-<script>
-  window.onload = () => {
-    window.print();
-    window.onafterprint = () => {
-      window.close();
-    };
-  };
-</script>
-
 
 </body>
 </html>
