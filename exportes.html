@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MRS TPV · Exportes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+
+<nav class="container-fluid">
+  <ul>
+    <li><strong>MRS TPV</strong></li>
+  </ul>
+  <ul>
+    <li id="rol-info"></li>
+
+    <li><a href="caja.html" id="caja-link">Caja</a></li>
+    <li><a href="historial.html" id="historial-link">Historial</a></li>
+    <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
+    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
+
+    <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
+  </ul>
+</nav>
+
+
+<main class="container">
+
+  <h3>Exportes para asesoría</h3>
+
+  <div class="grid">
+    <label>
+      Desde
+      <input type="date" id="fecha-desde">
+    </label>
+
+    <label>
+      Hasta
+      <input type="date" id="fecha-hasta">
+    </label>
+  </div>
+
+  <button onclick="calcularResumen()">
+    📊 Calcular resumen
+  </button>
+
+  <hr>
+
+  <article id="resultado" style="display:none;">
+    <h4>Resumen fiscal</h4>
+
+    <ul>
+      <li>Total ventas: <strong id="res-total"></strong></li>
+      <li>Base IVA (reparaciones): <strong id="res-base-iva"></strong></li>
+      <li>IVA repercutido: <strong id="res-iva"></strong></li>
+      <li>Base recargo (ventas): <strong id="res-base-re"></strong></li>
+      <li>Recargo equivalencia: <strong id="res-recargo"></strong></li>
+    </ul>
+
+    <button onclick="exportarCSV()">
+      ⬇ Exportar CSV
+    </button>
+  </article>
+
+</main>
+
+<script src="js/auth.js" type="module"></script>
+<script src="js/exportes.js" type="module"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rol = sessionStorage.getItem("rol");
+
+    if (!rol) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    const rolInfo = document.getElementById("rol-info");
+    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
+
+    if (rol !== "admin") {
+      const hide = ["config-link", "exportes-link"];
+      hide.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+    }
+  });
+</script>
+
+
+</body>
+</html>

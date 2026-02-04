@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MRS TPV · Empresa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+
+<nav class="container-fluid">
+  <ul>
+    <li><strong>MRS TPV</strong></li>
+  </ul>
+  <ul>
+    <li id="rol-info"></li>
+
+    <li><a href="caja.html" id="caja-link">Caja</a></li>
+    <li><a href="historial.html" id="historial-link">Historial</a></li>
+    <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
+    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
+
+    <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
+  </ul>
+</nav>
+
+
+<main class="container">
+  <h3>Configuración de la empresa</h3>
+
+  <form>
+    <label>
+      Nombre comercial
+      <input type="text" id="nombre">
+    </label>
+
+    <label>
+      Razón social
+      <input type="text" id="razon">
+    </label>
+
+    <label>
+      CIF / NIF
+      <input type="text" id="cif">
+    </label>
+
+    <label>
+      Dirección
+      <input type="text" id="direccion">
+    </label>
+
+    <label>
+      Teléfono
+      <input type="text" id="telefono">
+    </label>
+
+    <label>
+      Email
+      <input type="email" id="email">
+    </label>
+
+    <label>
+      Pie legal del ticket / factura
+      <textarea id="pie" rows="4"
+        placeholder="Ej: ¡Guárdame 15 días, soy tu garantía!"></textarea>
+    </label>
+
+    <button type="button" onclick="guardarEmpresa()">
+      💾 Guardar datos
+    </button>
+  </form>
+</main>
+
+<script src="js/auth.js" type="module"></script>
+<script src="js/config-empresa.js" type="module"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rol = sessionStorage.getItem("rol");
+
+    if (!rol) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    const rolInfo = document.getElementById("rol-info");
+    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
+
+    if (rol !== "admin") {
+      const hide = ["config-link", "exportes-link"];
+      hide.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+    }
+  });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MRS TPV · Caja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+
+<nav class="container-fluid">
+  <ul>
+    <li><strong>MRS TPV</strong></li>
+  </ul>
+  <ul>
+    <li id="rol-info"></li>
+    <li><a href="historial.html" id="historial-link">Historial</a></li>
+    <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
+    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
+    <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
+  </ul>
+</nav>
+
+<!-- =========================
+     ABRIR CAJA
+========================= -->
+
+<section
+  id="abrir-caja"
+  class="container"
+  style="display:none; margin-top:2rem;"
+>
+  <article>
+    <h3>Abrir caja</h3>
+
+    <label>
+      Fondo inicial (€)
+      <input
+        type="number"
+        id="fondo-inicial"
+        min="0"
+        step="0.01"
+        placeholder="Ej: 100.00"
+      >
+    </label>
+
+    <button onclick="abrirCaja()" role="button">
+      🟢 Abrir caja
+    </button>
+  </article>
+</section>
+
+<!-- =========================
+     ZONA CAJA (TODO JUNTO)
+========================= -->
+
+<div id="zona-caja" style="display:none;">
+
+  <main class="container">
+    <div class="grid">
+
+      <!-- IZQUIERDA: VENTA -->
+      <section>
+        <h3>Venta actual</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cant.</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="venta-lista"></tbody>
+        </table>
+
+        <p>Subtotal: <strong><span id="subtotal">0.00 €</span></strong></p>
+        <p>IVA: <strong><span id="total-iva">0.00 €</span></strong></p>
+        <p>Recargo: <strong><span id="total-recargo">0.00 €</span></strong></p>
+
+        <h4>Total: <span id="total-venta">0.00 €</span></h4>
+      </section>
+
+      <!-- DERECHA: CATEGORÍAS / PRODUCTOS -->
+      <section>
+        <h3>Categorías</h3>
+        <div id="categorias"></div>
+
+        <h3>Productos</h3>
+        <div id="productos"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <hr>
+
+  <h4>Forma de pago</h4>
+  <div>
+    <button onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
+    <button onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
+  </div>
+
+  <p>Seleccionado: <strong><span id="pago-seleccionado">—</span></strong></p>
+
+  <div id="bloque-efectivo" style="display:none; margin-top:1rem;">
+    <label>
+      Entrega el cliente (€)
+      <input
+        type="number"
+        id="efectivo-entregado"
+        placeholder="0.00"
+        min="0"
+        step="0.01"
+        oninput="calcularCambio()"
+      >
+    </label>
+
+    <p>Cambio: <strong><span id="cambio">0.00 €</span></strong></p>
+  </div>
+
+  <button onclick="guardarVenta()" role="button">
+    💾 Cobrar / Guardar venta
+  </button>
+
+<!-- =========================
+     CERRAR CAJA (ADMIN)
+========================= -->
+
+<section
+  id="cerrar-caja"
+  style="display:none; margin-top:2rem;"
+>
+  <article>
+    <h3>🔴 Cerrar caja</h3>
+
+    <p>Ventas realizadas: <strong><span id="res-ventas">0</span></strong></p>
+    <p>Total ventas: <strong><span id="res-total">0.00 €</span></strong></p>
+    <p>Efectivo: <strong><span id="res-efectivo">0.00 €</span></strong></p>
+    <p>Tarjeta: <strong><span id="res-tarjeta">0.00 €</span></strong></p>
+    <p>IVA: <strong><span id="res-iva">0.00 €</span></strong></p>
+    <p>Recargo: <strong><span id="res-recargo">0.00 €</span></strong></p>
+
+    <hr>
+
+    <p>
+      Efectivo teórico:
+      <strong><span id="res-teorico">0.00 €</span></strong>
+    </p>
+
+    <label>
+      Efectivo real contado (€)
+      <input
+        type="number"
+        id="efectivo-real"
+        step="0.01"
+        min="0"
+        oninput="calcularDescuadre()"
+      >
+    </label>
+
+    <p>
+      Descuadre:
+      <strong><span id="res-descuadre">0.00 €</span></strong>
+    </p>
+
+    <button onclick="confirmarCierreCaja()" role="button">
+      🔒 Cerrar caja
+    </button>
+  </article>
+</section>
+
+
+</div>
+
+<script src="js/auth.js" type="module"></script>
+<script src="js/caja.js" type="module"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rol = sessionStorage.getItem("rol");
+    if (!rol) window.location.href = "login.html";
+    document.getElementById("rol-info").innerText = "Rol: " + rol;
+
+    if (rol !== "admin") {
+      document.getElementById("config-link").style.display = "none";
+    }
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rol = sessionStorage.getItem("rol");
+
+    if (!rol) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    document.getElementById("rol-info").innerText = "Rol: " + rol;
+
+    if (rol !== "admin") {
+      document.getElementById("config-link").style.display = "none";
+      document.getElementById("exportes-link").style.display = "none";
+    }
+  });
+</script>
+
+
+</body>
+</html>

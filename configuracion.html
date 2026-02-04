@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MRS TPV · Configuración</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+
+<nav class="container-fluid">
+  <ul>
+    <li><strong>MRS TPV</strong></li>
+  </ul>
+  <ul>
+    <li id="rol-info"></li>
+
+    <li><a href="caja.html" id="caja-link">Caja</a></li>
+    <li><a href="historial.html" id="historial-link">Historial</a></li>
+    <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
+    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
+
+    <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
+  </ul>
+</nav>
+
+
+<main class="container">
+
+  <!-- CATEGORÍAS -->
+  <section>
+    <h3>Nueva categoría</h3>
+
+    <label>Nombre
+      <input type="text" id="cat-nombre">
+    </label>
+
+    <label>Tipo fiscal
+      <select id="cat-fiscal">
+        <option value="IVA">Solo IVA</option>
+        <option value="IVA_RE">IVA + Recargo</option>
+      </select>
+    </label>
+
+    <button onclick="crearCategoria()">Crear categoría</button>
+  </section>
+
+  <section>
+    <h4>Categorías existentes</h4>
+    <ul id="lista-categorias"></ul>
+  </section>
+
+  <hr>
+
+  <!-- SUBCATEGORÍAS -->
+  <section>
+    <h3>Nueva subcategoría</h3>
+
+    <label>Nombre
+      <input type="text" id="sub-nombre">
+    </label>
+
+    <label>Categoría
+      <select id="sub-categoria"></select>
+    </label>
+
+    <button onclick="crearSubcategoria()">Crear subcategoría</button>
+  </section>
+
+  <section>
+    <h4>Subcategorías existentes</h4>
+    <ul id="lista-subcategorias"></ul>
+  </section>
+
+  <hr>
+
+  <!-- PRODUCTOS -->
+  <section>
+    <h3>Nuevo producto / reparación</h3>
+
+    <label>Nombre
+      <input type="text" id="prod-nombre">
+    </label>
+
+    <label>Descripción
+      <input type="text" id="prod-desc">
+    </label>
+
+    <label>Categoría
+      <select id="prod-categoria"></select>
+    </label>
+
+    <label>Subcategoría
+      <select id="prod-subcategoria"></select>
+    </label>
+
+    <label>Precio coste
+      <input type="number" id="prod-coste">
+    </label>
+
+    <label>Precio venta
+      <input type="number" id="prod-venta">
+    </label>
+
+    <label>Tipo
+      <select id="prod-tipo">
+        <option value="reparacion">Reparación (IVA)</option>
+        <option value="producto">Producto (IVA + Recargo)</option>
+      </select>
+    </label>
+
+    <button onclick="crearProducto()">Crear producto</button>
+  </section>
+
+</main>
+
+<script src="js/auth.js" type="module"></script>
+<script src="js/config.js" type="module"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rol = sessionStorage.getItem("rol");
+    if (!rol) window.location.href = "login.html";
+    if (rol !== "admin") window.location.href = "caja.html";
+    document.getElementById("rol-info").innerText = "Rol: " + rol;
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rol = sessionStorage.getItem("rol");
+
+    if (!rol) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    const rolInfo = document.getElementById("rol-info");
+    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
+
+    if (rol !== "admin") {
+      const hide = ["config-link", "exportes-link"];
+      hide.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+    }
+  });
+</script>
+
+
+</body>
+</html>

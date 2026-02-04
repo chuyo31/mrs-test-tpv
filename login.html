@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MRS TPV · Login (V2)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+
+<nav class="container-fluid">
+  <ul>
+    <li><strong>MRS TPV</strong></li>
+  </ul>
+  <ul>
+    <li><small>V2 Test</small></li>
+  </ul>
+</nav>
+
+<main class="container">
+  <article>
+    <hgroup>
+      <h2>Inicio de sesión</h2>
+      <h3>Entorno de pruebas</h3>
+    </hgroup>
+
+    <label>
+      Email
+      <input type="email" id="email" placeholder="admin@test.com">
+    </label>
+
+    <label>
+      Contraseña
+      <input type="password" id="password" placeholder="••••••••">
+    </label>
+
+    <button type="button" onclick="login()">Entrar</button>
+  </article>
+</main>
+
+<script src="js/auth.js" type="module"></script>
+</body>
+</html>
