@@ -6,15 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    @media print {
-      body {
-        margin: 0;
-      }
+    @page {
+      size: A4;
+      margin: 20mm;
     }
 
     body {
       font-family: Arial, sans-serif;
-      margin: 40px;
+      font-size: 12px;
       color: #000;
     }
 
@@ -33,7 +32,8 @@
     }
 
     h1 {
-      margin: 0 0 10px 0;
+      margin: 0;
+      font-size: 20px;
     }
 
     table {
@@ -44,146 +44,110 @@
 
     th, td {
       border: 1px solid #000;
-      padding: 8px;
+      padding: 6px;
       text-align: left;
     }
 
     th {
-      background: #eee;
-    }
-
-    .totales {
-      width: 40%;
-      margin-left: auto;
-      margin-top: 20px;
-    }
-
-    .totales td {
-      border: none;
-      padding: 6px;
-    }
-
-    .totales tr td:last-child {
-      text-align: right;
+      background: #f0f0f0;
     }
 
     .right {
       text-align: right;
     }
 
+    .totales {
+      margin-top: 20px;
+      width: 40%;
+      float: right;
+    }
+
+    .totales td {
+      border: none;
+      padding: 4px;
+    }
+
     .footer {
-      margin-top: 40px;
-      font-size: 12px;
+      margin-top: 60px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+      }
     }
   </style>
-
-<!-- esta sona es exclusiva de ocultar el nav en las facturas -->
-
-<style>
-  @media print {
-    .no-print {
-      display: none !important;
-    }
-
-    body {
-      margin: 0;
-    }
-
-    main {
-      padding: 0;
-    }
-  }
-</style>
-
-
 </head>
 <body>
 
-  <nav class="container-fluid no-print">
-  <ul>
-    <li><strong>MRS TPV</strong></li>
-  </ul>
-  <ul>
-    <li id="rol-info"></li>
-
-    <li><a href="caja.html" id="caja-link">Caja</a></li>
-    <li><a href="historial.html" id="historial-link">Historial</a></li>
-    <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
-    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
-
-    <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
-  </ul>
-</nav>
-
-
+  <!-- CABECERA -->
   <div class="header">
     <div class="empresa">
-      <h1 id="empresa-nombre">TU EMPRESA</h1>
-      <div id="empresa-datos">
-        Dirección<br>
-        CIF: XXXXXXXX<br>
-        Tel: 000 000 000
-      </div>
+
+      <!-- LOGO (opcional desde Panel PRO) -->
+      <img id="empresa-logo"
+           style="max-width:150px;display:none;margin-bottom:10px;">
+
+      <strong id="empresa-nombre">TU EMPRESA</strong><br>
+
+      <!-- Datos dinámicos -->
+      <div id="empresa-direccion"></div>
+      <div id="empresa-telefono"></div>
+      <div id="empresa-email"></div>
+      <div id="empresa-web"></div>
+
     </div>
 
     <div class="factura-info">
-      <h2>FACTURA</h2>
-      Nº: <strong id="factura-numero"></strong><br>
-      Fecha: <span id="factura-fecha"></span>
+      <h1>FACTURA</h1>
+      Nº <span id="factura-numero"></span><br>
+      Fecha: <span id="factura-fecha"></span><br>
+      Pago: <span id="metodo-pago"></span>
     </div>
   </div>
 
+  <!-- LÍNEAS -->
   <table>
     <thead>
       <tr>
-        <th>Descripción</th>
-        <th>Cant.</th>
-        <th>Precio</th>
-        <th>Base</th>
+        <th>Concepto</th>
+        <th class="right">Cantidad</th>
+        <th class="right">Precio</th>
+        <th class="right">Importe</th>
       </tr>
     </thead>
     <tbody id="lineas"></tbody>
   </table>
 
+  <!-- TOTALES -->
   <table class="totales">
-    <tr><td>Subtotal</td><td id="subtotal"></td></tr>
-    <tr><td>IVA</td><td id="iva"></td></tr>
-    <tr><td>Recargo</td><td id="recargo"></td></tr>
-    <tr><td><strong>TOTAL</strong></td><td><strong id="total"></strong></td></tr>
+    <tr>
+      <td>Subtotal</td>
+      <td class="right" id="subtotal"></td>
+    </tr>
+    <tr>
+      <td>IVA</td>
+      <td class="right" id="iva"></td>
+    </tr>
+    <tr>
+      <td>Recargo</td>
+      <td class="right" id="recargo"></td>
+    </tr>
+    <tr>
+      <td><strong>TOTAL</strong></td>
+      <td class="right"><strong id="total"></strong></td>
+    </tr>
   </table>
 
-  <div class="footer">
-    Método de pago: <span id="metodo-pago"></span><br>
-    Gracias por su confianza.
+  <div style="clear:both"></div>
+
+  <!-- PIE LEGAL -->
+  <div class="footer" id="pie-legal">
+    Gracias por su confianza
   </div>
 
   <script src="js/factura.js" type="module"></script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const rol = sessionStorage.getItem("rol");
-
-    if (!rol) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    const rolInfo = document.getElementById("rol-info");
-    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
-
-    if (rol !== "admin") {
-      const hide = ["config-link", "exportes-link"];
-      hide.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-      });
-    }
-  });
-</script>
-
-
-
-
-
 </body>
 </html>

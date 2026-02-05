@@ -1,3 +1,4 @@
+import { cargarEmpresaEnDocumento } from "./empresa-docs.js";
 import { db } from "./firebase.js";
 import {
   doc,
@@ -10,51 +11,57 @@ import {
 
 async function cargarFactura() {
   const params = new URLSearchParams(window.location.search);
-  const ventaId = params.get("id");
+  const facturaId = params.get("id");
 
-  if (!ventaId) return;
+  const empresa = await cargarEmpresaEnDocumento();
+if (!empresa?.doc_pago) {
+  document.getElementById("metodo-pago").parentElement.style.display = "none";
+}
 
-  const snap = await getDoc(doc(db, "sales", ventaId));
-  if (!snap.exists()) return;
 
-  const v = snap.data();
-
-  /* =========================
-     VALIDACIÓN
-  ========================= */
-
-  if (!v.numero_legal || !v.numero_legal.startsWith("FAC")) {
-    alert("Esta venta no tiene factura generada");
+  if (!facturaId) {
+    alert("Factura sin ID");
     window.close();
     return;
   }
+
+  /* 🔹 AHORA BUSCAMOS EN 'invoices' */
+  const snap = await getDoc(doc(db, "invoices", facturaId));
+
+  if (!snap.exists()) {
+    alert("Factura no encontrada");
+    window.close();
+    return;
+  }
+
+  const f = snap.data();
 
   /* =========================
      DATOS GENERALES
   ========================= */
 
   document.getElementById("factura-numero").innerText =
-    v.numero_legal;
+    f.numero_legal || "—";
 
   document.getElementById("factura-fecha").innerText =
-    v.fecha
-      ? v.fecha.toDate().toLocaleDateString()
+    f.fecha
+      ? f.fecha.toDate().toLocaleDateString()
       : "";
 
+  document.getElementById("metodo-pago").innerText =
+    f.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
+
   document.getElementById("subtotal").innerText =
-    v.subtotal.toFixed(2) + " €";
+    f.subtotal.toFixed(2) + " €";
 
   document.getElementById("iva").innerText =
-    v.total_iva.toFixed(2) + " €";
+    f.total_iva.toFixed(2) + " €";
 
   document.getElementById("recargo").innerText =
-    v.total_recargo.toFixed(2) + " €";
+    f.total_recargo.toFixed(2) + " €";
 
   document.getElementById("total").innerText =
-    v.total.toFixed(2) + " €";
-
-  document.getElementById("metodo-pago").innerText =
-    v.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
+    f.total.toFixed(2) + " €";
 
   /* =========================
      LÍNEAS
@@ -63,7 +70,7 @@ async function cargarFactura() {
   const tbody = document.getElementById("lineas");
   tbody.innerHTML = "";
 
-  v.lineas.forEach(l => {
+  f.lineas.forEach(l => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${l.nombre}</td>

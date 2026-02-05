@@ -4,35 +4,114 @@
   <meta charset="UTF-8">
   <title>MRS TPV · Configuración</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 </head>
 <body>
 
+<!-- NAV -->
 <nav class="container-fluid">
   <ul>
     <li><strong>MRS TPV</strong></li>
   </ul>
   <ul>
     <li id="rol-info"></li>
-
-    <li><a href="caja.html" id="caja-link">Caja</a></li>
-    <li><a href="historial.html" id="historial-link">Historial</a></li>
+    <li><a href="caja.html">Caja</a></li>
+    <li><a href="historial.html">Historial</a></li>
     <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
-    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
-
+    <li><a href="configuracion.html">Configuración</a></li>
     <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
   </ul>
 </nav>
 
-
+<!-- MAIN -->
 <main class="container">
 
-  <!-- CATEGORÍAS -->
+  <h3>⚙️ Configuración · Panel PRO</h3>
+
+  <!-- ================= EMPRESA ================= -->
   <section>
-    <h3>Nueva categoría</h3>
+    <h4>🏢 Empresa</h4>
+
+    <label>Nombre comercial
+      <input id="nombre">
+    </label>
+
+    <label>Razón social
+      <input id="razon">
+    </label>
+
+    <label>CIF / NIF
+      <input id="cif">
+    </label>
+
+    <label>Dirección
+      <input id="direccion">
+    </label>
+
+    <label>Teléfono
+      <input id="telefono">
+    </label>
+
+    <label>Email
+      <input id="email">
+    </label>
+
+    <label>Web
+      <input id="web" placeholder="https://">
+    </label>
+
+    <label>Logo (URL por ahora)
+      <input id="logo" placeholder="https://">
+    </label>
+  </section>
+
+  <!-- ================= DOCUMENTOS ================= -->
+  <section>
+    <h4>🧾 Tickets y Facturas</h4>
+
+    <label><input type="checkbox" id="doc-logo"> Mostrar logo</label>
+    <label><input type="checkbox" id="doc-direccion"> Mostrar dirección</label>
+    <label><input type="checkbox" id="doc-telefono"> Mostrar teléfono</label>
+    <label><input type="checkbox" id="doc-email"> Mostrar email</label>
+    <label><input type="checkbox" id="doc-web"> Mostrar web</label>
+    <label><input type="checkbox" id="doc-pago"> Mostrar método de pago</label>
+    <label><input type="checkbox" id="doc-cambio"> Mostrar entregado y cambio</label>
+
+    <label>Texto legal
+      <textarea id="pie" rows="3"></textarea>
+    </label>
+  </section>
+
+  <!-- ================= APARIENCIA ================= -->
+  <section>
+    <h4>🎨 Apariencia</h4>
+
+    <label>Tema
+      <select id="tema">
+        <option value="claro">Claro</option>
+        <option value="oscuro">Oscuro</option>
+      </select>
+    </label>
+
+    <label>Color principal
+      <input type="color" id="color">
+    </label>
+  </section>
+
+  <button onclick="guardarPanelPro()" class="contrast">
+    💾 Guardar configuración
+  </button>
+
+  <hr>
+
+  <!-- ================= CATEGORÍAS ================= -->
+  <section>
+    <h3>📂 Categorías</h3>
 
     <label>Nombre
-      <input type="text" id="cat-nombre">
+      <input id="cat-nombre">
     </label>
 
     <label>Tipo fiscal
@@ -43,21 +122,18 @@
     </label>
 
     <button onclick="crearCategoria()">Crear categoría</button>
-  </section>
 
-  <section>
-    <h4>Categorías existentes</h4>
     <ul id="lista-categorias"></ul>
   </section>
 
   <hr>
 
-  <!-- SUBCATEGORÍAS -->
+  <!-- ================= SUBCATEGORÍAS ================= -->
   <section>
-    <h3>Nueva subcategoría</h3>
+    <h3>📁 Subcategorías</h3>
 
     <label>Nombre
-      <input type="text" id="sub-nombre">
+      <input id="sub-nombre">
     </label>
 
     <label>Categoría
@@ -65,25 +141,22 @@
     </label>
 
     <button onclick="crearSubcategoria()">Crear subcategoría</button>
-  </section>
 
-  <section>
-    <h4>Subcategorías existentes</h4>
     <ul id="lista-subcategorias"></ul>
   </section>
 
   <hr>
 
-  <!-- PRODUCTOS -->
+  <!-- ================= PRODUCTOS ================= -->
   <section>
-    <h3>Nuevo producto / reparación</h3>
+    <h3>🛒 Productos / Reparaciones</h3>
 
     <label>Nombre
-      <input type="text" id="prod-nombre">
+      <input id="prod-nombre">
     </label>
 
     <label>Descripción
-      <input type="text" id="prod-desc">
+      <input id="prod-desc">
     </label>
 
     <label>Categoría
@@ -114,40 +187,19 @@
 
 </main>
 
+<!-- SCRIPTS -->
 <script src="js/auth.js" type="module"></script>
 <script src="js/config.js" type="module"></script>
+<script src="js/config-panel-pro.js" type="module"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const rol = sessionStorage.getItem("rol");
-    if (!rol) window.location.href = "login.html";
-    if (rol !== "admin") window.location.href = "caja.html";
+    if (!rol) return location.href = "login.html";
+    if (rol !== "admin") return location.href = "caja.html";
     document.getElementById("rol-info").innerText = "Rol: " + rol;
   });
 </script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const rol = sessionStorage.getItem("rol");
-
-    if (!rol) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    const rolInfo = document.getElementById("rol-info");
-    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
-
-    if (rol !== "admin") {
-      const hide = ["config-link", "exportes-link"];
-      hide.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-      });
-    }
-  });
-</script>
-
 
 </body>
 </html>
