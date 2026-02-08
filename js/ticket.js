@@ -1,61 +1,50 @@
-import { cargarEmpresaEnDocumento } from "./empresa-docs.js";
 import { db } from "./firebase.js";
 import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import { cargarEmpresaDocs } from "./empresa-docs.js";
+
+/* =========================
+   CARGAR TICKET
+========================= */
+
 async function cargarTicket() {
   const params = new URLSearchParams(window.location.search);
-  await cargarEmpresaEnDocumento();
-  const ventaId = params.get("id");
+  const id = params.get("id");
 
-  if (!ventaId) {
-    alert("Ticket sin venta");
-    window.close();
-    return;
-  }
+  if (!id) return;
 
-  /* =========================
-     CARGAR VENTA
-  ========================= */
+  const snap = await getDoc(doc(db, "sales", id));
+  if (!snap.exists()) return;
 
-  const ventaSnap = await getDoc(doc(db, "sales", ventaId));
-  if (!ventaSnap.exists()) {
-    alert("Venta no encontrada");
-    window.close();
-    return;
-  }
-
-  const v = ventaSnap.data();
-
-  /* =========================
-     CARGAR PANEL PRO
-  ========================= */
-
-  const panelSnap = await getDoc(doc(db, "settings", "panel_pro"));
-  const p = panelSnap.exists() ? panelSnap.data() : {};
+  const v = snap.data();
 
   /* =========================
      EMPRESA
   ========================= */
 
-  const nombreEl = document.getElementById("empresa-nombre");
-  const datosEl = document.getElementById("empresa-datos");
+  const empresa = await cargarEmpresaDocs();
 
-  if (nombreEl) nombreEl.innerText = p.nombre || "";
+document.getElementById("empresa-nombre").innerText = empresa.nombre;
+document.getElementById("empresa-datos").innerHTML = empresa.datosHtml;
+document.getElementById("pie-legal").innerText = empresa.pie || "";
 
-  let datos = [];
+if (empresa.logo) {
+  const img = document.createElement("img");
+  img.src = empresa.logo;
+  img.style.maxWidth = "120px";
+  img.style.marginBottom = "6px";
 
-  if (p.doc_direccion && p.direccion) datos.push(p.direccion);
-  if (p.doc_telefono && p.telefono) datos.push("Tel: " + p.telefono);
-  if (p.doc_email && p.email) datos.push(p.email);
-  if (p.doc_web && p.web) datos.push(p.web);
+  document
+    .getElementById("empresa-nombre")
+    .before(img);
+}
 
-  if (datosEl) datosEl.innerText = datos.join(" · ");
 
   /* =========================
-     DATOS TICKET
+     TICKET
   ========================= */
 
   document.getElementById("ticket-numero").innerText =
@@ -65,79 +54,65 @@ async function cargarTicket() {
     v.fecha?.toDate().toLocaleString() || "";
 
   document.getElementById("subtotal").innerText =
-    v.subtotal.toFixed(2) + " €";
+    (v.subtotal ?? 0).toFixed(2) + " €";
 
   document.getElementById("iva").innerText =
-    v.total_iva.toFixed(2) + " €";
+    (v.total_iva ?? 0).toFixed(2) + " €";
 
   document.getElementById("recargo").innerText =
-    v.total_recargo.toFixed(2) + " €";
+    (v.total_recargo ?? 0).toFixed(2) + " €";
 
   document.getElementById("total").innerText =
-    v.total.toFixed(2) + " €";
+    (v.total ?? 0).toFixed(2) + " €";
+
+  document.getElementById("metodo-pago").innerText =
+    v.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
 
   /* =========================
-     LÍNEAS
+     LÍNEAS (ROBUSTAS)
   ========================= */
 
   const tbody = document.getElementById("lineas");
   tbody.innerHTML = "";
 
-  v.lineas.forEach(l => {
+  (v.lineas || []).forEach(l => {
+    const nombre =
+      l.nombre ||
+      l.producto ||
+      l.descripcion ||
+      "Artículo";
+
+    const cantidad = l.cantidad ?? 1;
+    const importe = l.base ?? l.total ?? 0;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${l.cantidad} x ${l.nombre}</td>
-      <td class="right">${l.base.toFixed(2)} €</td>
+      <td>${cantidad} x ${nombre}</td>
+      <td class="right">${importe.toFixed(2)} €</td>
     `;
     tbody.appendChild(tr);
   });
 
   /* =========================
-     MÉTODO DE PAGO
-  ========================= */
-
-  const metodoPagoEl = document.getElementById("metodo-pago");
-  if (p.doc_pago && metodoPagoEl) {
-    metodoPagoEl.innerText =
-      v.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
-  } else if (metodoPagoEl) {
-    metodoPagoEl.parentElement.style.display = "none";
-  }
-
-  /* =========================
      EFECTIVO
   ========================= */
 
-  const bloqueEfectivo = document.getElementById("bloque-efectivo");
+  if (v.metodo_pago === "efectivo") {
+    document.getElementById("entregado").innerText =
+      (v.efectivo_entregado ?? 0).toFixed(2) + " €";
 
-  const empresa = await cargarEmpresaEnDocumento();
-
-if (
-  v.metodo_pago === "efectivo" &&
-  empresa?.doc_pago
-) {
-  document.getElementById("entregado").innerText =
-    v.efectivo_entregado.toFixed(2) + " €";
-  document.getElementById("cambio").innerText =
-    v.cambio.toFixed(2) + " €";
-} else {
-  document.getElementById("bloque-efectivo").style.display = "none";
-}
-
+    document.getElementById("cambio").innerText =
+      (v.cambio ?? 0).toFixed(2) + " €";
+  } else {
+    const bloque = document.getElementById("bloque-efectivo");
+    if (bloque) bloque.style.display = "none";
+  }
 
   /* =========================
-     PIE LEGAL
-  ========================= */
-
-  const pieEl = document.getElementById("pie-legal");
-  if (pieEl && p.pie) pieEl.innerText = p.pie;
-
-  /* =========================
-     IMPRIMIR Y CERRAR
+     IMPRIMIR
   ========================= */
 
   window.onafterprint = () => window.close();
-
   setTimeout(() => window.print(), 400);
 }
 

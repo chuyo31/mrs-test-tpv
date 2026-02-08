@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBqnNgjPsEhxCX2kxvW4OUjLme0IqG8pTQ",
   authDomain: "mrs-test-tpv.firebaseapp.com",
   projectId: "mrs-test-tpv",
-  storageBucket: "mrs-test-tpv.appspot.com",
+  storageBucket: "mrs-test-tpv.firebasestorage.app",
   messagingSenderId: "912692824915",
   appId: "1:912692824915:web:9d79acbbc7bcaf3cdb6fa6"
 };

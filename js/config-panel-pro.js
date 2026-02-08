@@ -1,28 +1,30 @@
-import { db } from "./firebase.js";
+console.log("⚙️ config-panel-pro.js CARGADO");
 
+import { db } from "./firebase.js";
 import {
   doc,
   getDoc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const storage = getStorage();
+
 /* =========================
-   REFERENCIA
+   CARGAR CONFIGURACIÓN
 ========================= */
-
-const PANEL_REF = doc(db, "settings", "panel_pro");
-
-/* =========================
-   CARGAR PANEL PRO
-========================= */
-
 async function cargarPanelPro() {
-  const snap = await getDoc(PANEL_REF);
+  const snap = await getDoc(doc(db, "settings", "panel_pro"));
   if (!snap.exists()) return;
 
   const d = snap.data();
 
-  // ===== EMPRESA =====
   document.getElementById("nombre").value = d.nombre || "";
   document.getElementById("razon").value = d.razon || "";
   document.getElementById("cif").value = d.cif || "";
@@ -30,46 +32,48 @@ async function cargarPanelPro() {
   document.getElementById("telefono").value = d.telefono || "";
   document.getElementById("email").value = d.email || "";
   document.getElementById("web").value = d.web || "";
-  document.getElementById("logo").value = d.logo || "";
+  document.getElementById("pie").value = d.pie || "";
 
-  // ===== DOCUMENTOS =====
   document.getElementById("doc-logo").checked = d.doc_logo ?? true;
   document.getElementById("doc-direccion").checked = d.doc_direccion ?? true;
   document.getElementById("doc-telefono").checked = d.doc_telefono ?? true;
-  document.getElementById("doc-email").checked = d.doc_email ?? true;
+  document.getElementById("doc-email").checked = d.doc_email ?? false;
   document.getElementById("doc-web").checked = d.doc_web ?? false;
   document.getElementById("doc-pago").checked = d.doc_pago ?? true;
   document.getElementById("doc-cambio").checked = d.doc_cambio ?? true;
 
-  document.getElementById("pie").value = d.pie || "";
-
-  // ===== APARIENCIA =====
-  document.getElementById("tema").value = d.tema || "claro";
-  document.getElementById("color").value = d.color || "#2563eb";
+  if (d.logo_url) {
+    const img = document.getElementById("logo-preview");
+    img.src = d.logo_url;
+    img.style.display = "block";
+  }
 }
 
 /* =========================
-   GUARDAR PANEL PRO
+   GUARDAR CONFIGURACIÓN
 ========================= */
-
 window.guardarPanelPro = async function () {
-  if (sessionStorage.getItem("rol") !== "admin") {
-    alert("Solo el administrador puede modificar la configuración");
-    return;
+  const fileInput = document.getElementById("logo");
+  let logoUrl = null;
+
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const storageRef = ref(storage, "empresa/logo.png");
+
+    await uploadBytes(storageRef, file);
+    logoUrl = await getDownloadURL(storageRef);
   }
 
   const data = {
-    // ===== EMPRESA =====
-    nombre: document.getElementById("nombre").value.trim(),
-    razon: document.getElementById("razon").value.trim(),
-    cif: document.getElementById("cif").value.trim(),
-    direccion: document.getElementById("direccion").value.trim(),
-    telefono: document.getElementById("telefono").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    web: document.getElementById("web").value.trim(),
-    logo: document.getElementById("logo").value.trim(),
+    nombre: nombre.value.trim(),
+    razon: razon.value.trim(),
+    cif: cif.value.trim(),
+    direccion: direccion.value.trim(),
+    telefono: telefono.value.trim(),
+    email: email.value.trim(),
+    web: web.value.trim(),
+    pie: pie.value.trim(),
 
-    // ===== DOCUMENTOS =====
     doc_logo: document.getElementById("doc-logo").checked,
     doc_direccion: document.getElementById("doc-direccion").checked,
     doc_telefono: document.getElementById("doc-telefono").checked,
@@ -78,22 +82,14 @@ window.guardarPanelPro = async function () {
     doc_pago: document.getElementById("doc-pago").checked,
     doc_cambio: document.getElementById("doc-cambio").checked,
 
-    pie: document.getElementById("pie").value.trim(),
-
-    // ===== APARIENCIA =====
-    tema: document.getElementById("tema").value,
-    color: document.getElementById("color").value,
-
     updated_at: new Date()
   };
 
-  await setDoc(PANEL_REF, data, { merge: true });
+  if (logoUrl) data.logo_url = logoUrl;
+
+  await setDoc(doc(db, "settings", "panel_pro"), data, { merge: true });
 
   alert("✅ Configuración guardada correctamente");
 };
-
-/* =========================
-   INIT
-========================= */
 
 document.addEventListener("DOMContentLoaded", cargarPanelPro);

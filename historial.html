@@ -15,32 +15,28 @@
   </ul>
   <ul>
     <li id="rol-info"></li>
-
-    <li><a href="caja.html" id="caja-link">Caja</a></li>
-    <li><a href="historial.html" id="historial-link">Historial</a></li>
+    <li><a href="caja.html">Caja</a></li>
+    <li><a href="historial.html">Historial</a></li>
     <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
     <li><a href="configuracion.html" id="config-link">Configuración</a></li>
-
     <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
   </ul>
 </nav>
-
 
 <main class="container">
   <h3>Historial de ventas</h3>
 
   <table>
     <thead>
-  <tr>
-    <th>Fecha</th>
-    <th>Nº</th>
-    <th>Total</th>
-    <th>Pago</th>
-    <th>Estado</th>
-    <th>Acciones</th>
-  </tr>
-</thead>
-
+      <tr>
+        <th>Fecha</th>
+        <th>Nº</th>
+        <th>Total</th>
+        <th>Pago</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
     <tbody id="lista-ventas"></tbody>
   </table>
 </main>
@@ -49,27 +45,20 @@
 <script src="js/historial.js" type="module"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const rol = sessionStorage.getItem("rol");
+document.addEventListener("DOMContentLoaded", () => {
+  const rol = sessionStorage.getItem("rol");
+  if (!rol) return location.href = "login.html";
 
-    if (!rol) {
-      window.location.href = "login.html";
-      return;
-    }
+  document.getElementById("rol-info").innerText = "Rol: " + rol;
 
-    const rolInfo = document.getElementById("rol-info");
-    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
-
-    if (rol !== "admin") {
-      const hide = ["config-link", "exportes-link"];
-      hide.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-      });
-    }
-  });
+  if (rol !== "admin") {
+    ["config-link", "exportes-link"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+  }
+});
 </script>
-
 
 </body>
 </html>

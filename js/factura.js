@@ -1,9 +1,8 @@
-import { cargarEmpresaEnDocumento } from "./empresa-docs.js";
 import { db } from "./firebase.js";
-import {
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import { cargarEmpresaDocs } from "./empresa-docs.js";
 
 /* =========================
    CARGAR FACTURA
@@ -11,57 +10,65 @@ import {
 
 async function cargarFactura() {
   const params = new URLSearchParams(window.location.search);
-  const facturaId = params.get("id");
+  const id = params.get("id");
 
-  const empresa = await cargarEmpresaEnDocumento();
-if (!empresa?.doc_pago) {
-  document.getElementById("metodo-pago").parentElement.style.display = "none";
+  if (!id) {
+    console.warn("Factura sin ID");
+    return;
+  }
+
+  const facturaSnap = await getDoc(doc(db, "invoices", id));
+  if (!facturaSnap.exists()) {
+    console.warn("Factura no encontrada");
+    return;
+  }
+
+  const f = facturaSnap.data();
+
+  /* =========================
+     EMPRESA
+  ========================= */
+
+  const empresa = await cargarEmpresaDocs();
+
+document.getElementById("empresa-nombre").innerText = empresa.nombre;
+document.getElementById("empresa-datos").innerHTML = empresa.datosHtml;
+document.getElementById("pie-legal").innerText = empresa.pie || "";
+
+const img = document.getElementById("empresa-logo");
+
+if (empresa.logo && empresa.mostrarLogo) {
+  img.src = empresa.logo;
+  img.style.display = "block";
+} else {
+  img.style.display = "none";
 }
 
 
-  if (!facturaId) {
-    alert("Factura sin ID");
-    window.close();
-    return;
-  }
-
-  /* 🔹 AHORA BUSCAMOS EN 'invoices' */
-  const snap = await getDoc(doc(db, "invoices", facturaId));
-
-  if (!snap.exists()) {
-    alert("Factura no encontrada");
-    window.close();
-    return;
-  }
-
-  const f = snap.data();
-
   /* =========================
-     DATOS GENERALES
+     DATOS FACTURA
   ========================= */
 
   document.getElementById("factura-numero").innerText =
-    f.numero_legal || "—";
+    f.numero_legal || "";
 
   document.getElementById("factura-fecha").innerText =
-    f.fecha
-      ? f.fecha.toDate().toLocaleDateString()
-      : "";
+    f.fecha?.toDate().toLocaleDateString() || "";
 
   document.getElementById("metodo-pago").innerText =
     f.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
 
   document.getElementById("subtotal").innerText =
-    f.subtotal.toFixed(2) + " €";
+    (f.subtotal ?? 0).toFixed(2) + " €";
 
   document.getElementById("iva").innerText =
-    f.total_iva.toFixed(2) + " €";
+    (f.total_iva ?? 0).toFixed(2) + " €";
 
   document.getElementById("recargo").innerText =
-    f.total_recargo.toFixed(2) + " €";
+    (f.total_recargo ?? 0).toFixed(2) + " €";
 
   document.getElementById("total").innerText =
-    f.total.toFixed(2) + " €";
+    (f.total ?? 0).toFixed(2) + " €";
 
   /* =========================
      LÍNEAS
@@ -70,28 +77,36 @@ if (!empresa?.doc_pago) {
   const tbody = document.getElementById("lineas");
   tbody.innerHTML = "";
 
-  f.lineas.forEach(l => {
+  (f.lineas || []).forEach(l => {
+    const nombre =
+      l.nombre ||
+      l.producto ||
+      l.descripcion ||
+      "Artículo";
+
+    const cantidad = l.cantidad ?? 1;
+    const precio =
+      l.precio ??
+      (l.base && cantidad ? l.base / cantidad : 0);
+
+    const base = l.base ?? 0;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${l.nombre}</td>
-      <td class="right">${l.cantidad}</td>
-      <td class="right">${l.precio.toFixed(2)} €</td>
-      <td class="right">${l.base.toFixed(2)} €</td>
+      <td>${nombre}</td>
+      <td class="right">${cantidad}</td>
+      <td class="right">${precio.toFixed(2)} €</td>
+      <td class="right">${base.toFixed(2)} €</td>
     `;
     tbody.appendChild(tr);
   });
 
   /* =========================
-     IMPRIMIR Y CERRAR
+     IMPRIMIR
   ========================= */
 
-  window.onafterprint = () => {
-    window.close();
-  };
-
-  setTimeout(() => {
-    window.print();
-  }, 400);
+  window.onafterprint = () => window.close();
+  setTimeout(() => window.print(), 400);
 }
 
 document.addEventListener("DOMContentLoaded", cargarFactura);
