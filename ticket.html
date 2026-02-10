@@ -1,65 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- fin de los estilos css-->
   <meta charset="UTF-8">
   <title>Ticket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: monospace; width:80mm; margin:auto; font-size:12px }
-    hr { border-top:1px dashed #000 }
-    table { width:100% }
-    .right { text-align:right }
-    .center { text-align:center }
-    .total { font-weight:bold }
-    img { max-width:120px; margin-bottom:6px }
+    body { font-family: 'Courier New', Courier, monospace; width: 80mm; margin: auto; font-size: 12px; color: #000; }
+    hr { border: 0; border-top: 1px dashed #000; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .total { font-weight: bold; font-size: 14px; }
+    img { max-width: 120px; margin-bottom: 10px; filter: grayscale(1); }
+    .desglose td { font-size: 11px; padding-top: 2px; }
+    @media print {
+        body { width: 100%; margin: 0; }
+        @page { margin: 0; }
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- EMPRESA -->
-  <div class="center">
+  <div class="center" style="margin-top: 10px;">
     <img id="empresa-logo" style="display:none">
-    <strong id="empresa-nombre">TU EMPRESA</strong><br>
-    <span id="empresa-datos"></span>
+    <br><strong id="empresa-nombre" style="font-size: 16px;"></strong><br>
+    <div id="empresa-datos" style="white-space: pre-wrap;"></div>
   </div>
 
   <hr>
 
-  <!-- DATOS -->
   <div>
-    Ticket Nº <span id="ticket-numero"></span><br>
-    Fecha: <span id="ticket-fecha"></span>
+    <strong>Ticket Nº:</strong> <span id="ticket-numero"></span><br>
+    <strong>Fecha:</strong> <span id="ticket-fecha"></span>
   </div>
 
   <hr>
 
-  <!-- LINEAS -->
-  <table><tbody id="lineas"></tbody></table>
-
-  <hr>
-
-  <!-- TOTALES -->
   <table>
-    <tr><td>Subtotal</td><td class="right" id="subtotal"></td></tr>
-    <tr><td>IVA</td><td class="right" id="iva"></td></tr>
-    <tr><td>Recargo</td><td class="right" id="recargo"></td></tr>
-    <tr class="total"><td>TOTAL</td><td class="right" id="total"></td></tr>
+    <tbody id="lineas"></tbody>
   </table>
 
   <hr>
 
-  <!-- PAGO -->
-  <div id="bloque-efectivo">
-    Pago: <span id="metodo-pago"></span><br>
-    Entregado: <span id="entregado"></span><br>
-    Cambio: <span id="cambio"></span>
+  <table class="desglose">
+    <tr>
+      <td>Base Imponible</td>
+      <td class="right" id="subtotal">0.00 €</td>
+    </tr>
+    <tr>
+      <td>IVA (21%)</td>
+      <td class="right" id="iva">0.00 €</td>
+    </tr>
+    <tr>
+      <td>Recargo RE</td>
+      <td class="right" id="recargo">0.00 €</td>
+    </tr>
+    <tr class="total">
+      <td style="padding-top: 8px;">TOTAL</td>
+      <td class="right" style="padding-top: 8px;" id="total">0.00 €</td>
+    </tr>
+  </table>
+
+  <hr>
+
+  <div id="bloque-pago">
+    Forma de pago: <span id="metodo-pago"></span>
+    <div id="bloque-efectivo">
+        Entregado: <span id="entregado">0.00 €</span><br>
+        Cambio: <span id="cambio">0.00 €</span>
+    </div>
   </div>
 
   <hr>
 
-  <!-- PIE -->
-  <div class="center" id="pie-legal"></div>
+  <div class="center" id="pie-legal" style="font-size: 10px; margin-bottom: 20px;"></div>
 
   <script src="js/ticket.js" type="module"></script>
 </body>

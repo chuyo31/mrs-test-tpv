@@ -1,108 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- fin de los estilos css-->
   <meta charset="UTF-8">
   <title>Factura</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
-    @page {
-      size: A4;
-      margin: 20mm;
-    }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      color: #000;
-    }
-
+    @page { size: A4; margin: 15mm; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #333; line-height: 1.4; }
+    
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 2px solid #000;
-      padding-bottom: 10px;
-      margin-bottom: 25px;
+      margin-bottom: 40px;
     }
 
-    .empresa {
-      max-width: 60%;
-    }
+    .empresa { max-width: 50%; }
+    .empresa img { max-height: 70px; margin-bottom: 10px; }
+    .empresa strong { font-size: 18px; color: #000; }
+    .empresa div { color: #666; font-size: 11px; margin-top: 5px; }
 
-    .empresa img {
-      max-height: 80px;
-      max-width: 200px;
-      object-fit: contain;
-      margin-bottom: 8px;
-    }
+    .factura-info { text-align: right; }
+    .factura-info h1 { margin: 0; font-size: 28px; color: #000; font-weight: 300; }
+    .info-box { background: #f8fafc; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #e2e8f0; }
 
-    .empresa strong {
-      font-size: 15px;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+    th { background: #1e293b; color: #fff; text-align: left; padding: 10px; font-size: 11px; text-transform: uppercase; }
+    td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+    .right { text-align: right; }
 
-    .factura-info {
-      text-align: right;
-      font-size: 12px;
+    .totales-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 30px;
     }
-
-    .factura-info h1 {
-      margin: 0 0 5px 0;
-      font-size: 22px;
-      letter-spacing: 1px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    th, td {
-      border: 1px solid #000;
-      padding: 6px;
-    }
-
-    th {
-      background: #f2f2f2;
-      font-weight: bold;
-    }
-
-    .right {
-      text-align: right;
-    }
-
-    .totales {
-      margin-top: 20px;
-      width: 40%;
-      float: right;
-      border: 1px solid #000;
-    }
-
-    .totales td {
-      border: none;
-      padding: 6px;
-    }
-
-    .totales tr:last-child td {
-      border-top: 2px solid #000;
-      font-size: 14px;
-      font-weight: bold;
-    }
+    .totales { width: 250px; }
+    .totales td { padding: 5px 0; border: none; }
+    .total-row { font-size: 16px; font-weight: bold; color: #000; border-top: 2px solid #000 !important; }
 
     .footer {
-      margin-top: 60px;
-      padding-top: 10px;
-      border-top: 1px solid #000;
-      font-size: 11px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      font-size: 10px;
       text-align: center;
-      color: #333;
+      padding-bottom: 20px;
+      color: #94a3b8;
     }
 
     @media print {
-      body {
-        margin: 0;
-      }
+      body { -webkit-print-color-adjust: exact; }
+      .footer { position: absolute; }
     }
   </style>
 </head>
@@ -111,52 +65,57 @@
   <div class="header">
     <div class="empresa">
       <img id="empresa-logo" style="display:none">
-      <strong id="empresa-nombre">TU EMPRESA</strong><br>
+      <br><strong id="empresa-nombre"></strong>
       <div id="empresa-datos"></div>
     </div>
 
     <div class="factura-info">
       <h1>FACTURA</h1>
-      Nº <strong id="factura-numero"></strong><br>
-      Fecha: <span id="factura-fecha"></span><br>
-      Pago: <span id="metodo-pago"></span>
+      <div class="info-box">
+        <strong>Nº:</strong> <span id="factura-numero"></span><br>
+        <strong>Fecha:</strong> <span id="factura-fecha"></span><br>
+        <strong>Pago:</strong> <span id="metodo-pago"></span>
+      </div>
     </div>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Concepto</th>
-        <th class="right">Cantidad</th>
-        <th class="right">Precio</th>
-        <th class="right">Importe</th>
+        <th>Descripción</th>
+        <th class="right">Cant.</th>
+        <th class="right">Precio Ud.</th>
+        <th class="right">Base Imponible</th>
       </tr>
     </thead>
     <tbody id="lineas"></tbody>
   </table>
 
-  <table class="totales">
-    <tr>
-      <td>Subtotal</td>
-      <td class="right" id="subtotal"></td>
-    </tr>
-    <tr>
-      <td>IVA</td>
-      <td class="right" id="iva"></td>
-    </tr>
-    <tr>
-      <td>Recargo</td>
-      <td class="right" id="recargo"></td>
-    </tr>
-    <tr>
-      <td>TOTAL</td>
-      <td class="right" id="total"></td>
-    </tr>
-  </table>
+  <div class="totales-container">
+    <table class="totales">
+      <tr>
+        <td>Suma Base Imponible</td>
+        <td class="right" id="subtotal"></td>
+      </tr>
+      <tr>
+        <td>IVA (21%)</td>
+        <td class="right" id="iva"></td>
+      </tr>
+      <tr>
+        <td>Recargo RE</td>
+        <td class="right" id="recargo"></td>
+      </tr>
+      <tr class="total-row">
+        <td>TOTAL</td>
+        <td class="right" id="total"></td>
+      </tr>
+    </table>
+  </div>
 
-  <div style="clear:both"></div>
-
-  <div class="footer" id="pie-legal"></div>
+  <div class="footer">
+    <div id="pie-legal"></div>
+    <p style="margin-top: 5px;">Gracias por su confianza.</p>
+  </div>
 
   <script src="js/factura.js" type="module"></script>
 </body>

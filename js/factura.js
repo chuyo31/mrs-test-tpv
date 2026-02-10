@@ -1,112 +1,121 @@
 import { db } from "./firebase.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { cargarEmpresaDocs } from "./empresa-docs.js";
 
-/* =========================
-   CARGAR FACTURA
-========================= */
-
 async function cargarFactura() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-  if (!id) {
-    console.warn("Factura sin ID");
-    return;
-  }
+    if (!id) {
+        console.error("No se encontró el ID en la URL");
+        return;
+    }
 
-  const facturaSnap = await getDoc(doc(db, "invoices", id));
-  if (!facturaSnap.exists()) {
-    console.warn("Factura no encontrada");
-    return;
-  }
+    let facturaData = null;
 
-  const f = facturaSnap.data();
+    try {
+        // 1. Intentamos buscar primero en 'invoices'
+        const invoiceSnap = await getDoc(doc(db, "invoices", id));
+        
+        if (invoiceSnap.exists()) {
+            facturaData = invoiceSnap.data();
+            console.log("Documento encontrado en: invoices");
+        } else {
+            // 2. Si no existe en invoices, buscamos en 'sales'
+            const saleSnap = await getDoc(doc(db, "sales", id));
+            if (saleSnap.exists()) {
+                facturaData = saleSnap.data();
+                console.log("Documento encontrado en: sales");
+            }
+        }
+    } catch (error) {
+        console.error("Error al consultar Firebase:", error);
+    }
 
-  /* =========================
-     EMPRESA
-  ========================= */
+    if (!facturaData) {
+        alert("Error: No se ha encontrado el documento en ninguna categoría (invoices/sales).");
+        return;
+    }
 
-  const empresa = await cargarEmpresaDocs();
+    const f = facturaData;
 
-document.getElementById("empresa-nombre").innerText = empresa.nombre;
-document.getElementById("empresa-datos").innerHTML = empresa.datosHtml;
-document.getElementById("pie-legal").innerText = empresa.pie || "";
+    /* =========================
+       EMPRESA & LOGO
+    ========================= */
+    const empresa = await cargarEmpresaDocs();
+    document.getElementById("empresa-nombre").innerText = empresa.nombre || "MI EMPRESA";
+    document.getElementById("empresa-datos").innerHTML = empresa.datosHtml || "";
+    document.getElementById("pie-legal").innerText = empresa.pie || "";
 
-const img = document.getElementById("empresa-logo");
+    const imgLogo = document.getElementById("empresa-logo");
+    if (empresa.logo && empresa.mostrarLogo) {
+        imgLogo.src = empresa.logo;
+        imgLogo.style.display = "block";
+    }
 
-if (empresa.logo && empresa.mostrarLogo) {
-  img.src = empresa.logo;
-  img.style.display = "block";
-} else {
-  img.style.display = "none";
+    /* =========================
+       DATOS FACTURA
+    ========================= */
+    document.getElementById("factura-numero").innerText = f.numero_legal || "S/N";
+    document.getElementById("factura-fecha").innerText = 
+        f.fecha?.toDate ? f.fecha.toDate().toLocaleDateString() : new Date().toLocaleDateString();
+
+    document.getElementById("metodo-pago").innerText = 
+        f.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
+
+    /* =========================
+       LÍNEAS Y DESGLOSE
+    ========================= */
+    const tbody = document.getElementById("lineas");
+    tbody.innerHTML = "";
+
+    let acumuladoSubtotal = 0;
+    let acumuladoIva = 0;
+    let acumuladoRecargo = 0;
+
+    const lineas = f.lineas || [];
+
+    lineas.forEach(l => {
+        const cantidad = l.cantidad ?? 1;
+        const pvpUnitario = l.precio ?? 0;
+        const pvpTotalFila = pvpUnitario * cantidad;
+
+        // Cálculo de impuestos por línea (Regla de Oro Fiscal)
+        const divisor = (l.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+        const baseFila = pvpTotalFila / divisor;
+        const ivaFila = baseFila * 0.21;
+        const reFila = (l.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
+
+        acumuladoSubtotal += baseFila;
+        acumuladoIva += ivaFila;
+        acumuladoRecargo += reFila;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${l.nombre || 'Artículo'}</td>
+            <td class="right">${cantidad}</td>
+            <td class="right">${pvpUnitario.toFixed(2)} €</td>
+            <td class="right">${baseFila.toFixed(2)} €</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Totales finales
+    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva + acumuladoRecargo);
+    
+    document.getElementById("subtotal").innerText = acumuladoSubtotal.toFixed(2) + " €";
+    document.getElementById("iva").innerText = acumuladoIva.toFixed(2) + " €";
+    document.getElementById("recargo").innerText = acumuladoRecargo.toFixed(2) + " €";
+    document.getElementById("total").innerText = totalFinal.toFixed(2) + " €";
+
+    /* =========================
+       IMPRIMIR
+    ========================= */
+    setTimeout(() => {
+        window.print();
+        // window.onafterprint = () => window.close();
+    }, 1000);
 }
 
-
-  /* =========================
-     DATOS FACTURA
-  ========================= */
-
-  document.getElementById("factura-numero").innerText =
-    f.numero_legal || "";
-
-  document.getElementById("factura-fecha").innerText =
-    f.fecha?.toDate().toLocaleDateString() || "";
-
-  document.getElementById("metodo-pago").innerText =
-    f.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
-
-  document.getElementById("subtotal").innerText =
-    (f.subtotal ?? 0).toFixed(2) + " €";
-
-  document.getElementById("iva").innerText =
-    (f.total_iva ?? 0).toFixed(2) + " €";
-
-  document.getElementById("recargo").innerText =
-    (f.total_recargo ?? 0).toFixed(2) + " €";
-
-  document.getElementById("total").innerText =
-    (f.total ?? 0).toFixed(2) + " €";
-
-  /* =========================
-     LÍNEAS
-  ========================= */
-
-  const tbody = document.getElementById("lineas");
-  tbody.innerHTML = "";
-
-  (f.lineas || []).forEach(l => {
-    const nombre =
-      l.nombre ||
-      l.producto ||
-      l.descripcion ||
-      "Artículo";
-
-    const cantidad = l.cantidad ?? 1;
-    const precio =
-      l.precio ??
-      (l.base && cantidad ? l.base / cantidad : 0);
-
-    const base = l.base ?? 0;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${nombre}</td>
-      <td class="right">${cantidad}</td>
-      <td class="right">${precio.toFixed(2)} €</td>
-      <td class="right">${base.toFixed(2)} €</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  /* =========================
-     IMPRIMIR
-  ========================= */
-
-  window.onafterprint = () => window.close();
-  setTimeout(() => window.print(), 400);
-}
-
+// Iniciar carga al estar listo el DOM
 document.addEventListener("DOMContentLoaded", cargarFactura);

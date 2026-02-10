@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- fin de los estilos css-->
+    <meta charset="UTF-8">
+    <title>MRS TPV · Cierre de Caja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        .resumen-cierre { background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem; }
+        .grid-totales { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .total-valor { font-weight: bold; text-align: right; }
+        .diferencia-positiva { color: green; }
+        .diferencia-negativa { color: red; }
+    </style>
+</head>
+<body>
+
+    <div id="navbar-app"></div> 
+    <script src="js/navbar.js" type="module"></script>
+
+    <main class="container">
+        <article id="no-caja" style="display:none;">
+            <h3>No hay ninguna caja abierta</h3>
+            <p>Debes abrir la caja desde la sección de Ventas antes de poder cerrarla.</p>
+            <a href="caja.html" role="button">Ir a Caja</a>
+        </article>
+
+        <section id="zona-cierre" style="display:none;">
+            <h3>Cierre de Caja (Z)</h3>
+            <p>Fecha de apertura: <span id="fecha-apertura"></span></p>
+
+            <div class="grid">
+                <div class="resumen-cierre">
+                    <h5>Resumen del Sistema</h5>
+                    <div class="grid-totales">
+                        <span>Fondo Inicial:</span> <span id="sys-fondo" class="total-valor">0.00 €</span>
+                        <span>Ventas Efectivo:</span> <span id="sys-efectivo" class="total-valor">0.00 €</span>
+                        <span>Ventas Tarjeta:</span> <span id="sys-tarjeta" class="total-valor">0.00 €</span>
+                        <span>Abonos/Devoluciones:</span> <span id="sys-abonos" class="total-valor">0.00 €</span>
+                        <hr style="grid-column: span 2;">
+                        <strong>Esperado en Cajón:</strong> <strong id="sys-total-caja" class="total-valor">0.00 €</strong>
+                    </div>
+                </div>
+
+                <div class="resumen-cierre">
+                    <h5>Contante Real</h5>
+                    <label>Efectivo Real en Cajón (€)
+                        <input type="number" id="real-efectivo" step="0.01" placeholder="Cuenta el dinero físico" oninput="calcularDescuadre()">
+                    </label>
+                    <div class="grid-totales" style="margin-top:10px;">
+                        <strong>Descuadre:</strong> <strong id="descuadre" class="total-valor">0.00 €</strong>
+                    </div>
+                </div>
+            </div>
+
+            <label>Observaciones de cierre
+                <textarea id="obs-cierre" placeholder="Ej: Faltan 2€ por error en cambio..."></textarea>
+            </label>
+
+            <button class="contrast" onclick="ejecutarCierre()">🔒 Cerrar Caja y Finalizar Día</button>
+        </section>
+    </main>
+
+    <script src="js/auth.js" type="module"></script>
+    <script src="js/cierre.js" type="module"></script>
+</body>
+</html>

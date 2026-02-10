@@ -1,185 +1,297 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- fin de los estilos css-->
   <meta charset="UTF-8">
-  <title>MRS TPV · Configuración</title>
+  <title>Configuración · MRS TPV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    /* VARIABLES DE TEMA (Base) */
+    :root {
+      --bg-app: #f4f7f9;
+      --bg-card: #ffffff;
+      --text-main: #2d3748;
+      --border-color: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --accent: #3b82f6;
+    }
+
+    /* Estilos de Layout tipo Programa */
+    body { background-color: var(--bg-app); color: var(--text-main); transition: all 0.3s ease; }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 25px;
+      margin-top: 20px;
+    }
+
+    /* Menú Lateral */
+    .side-nav {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+    }
+
+    .side-nav button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+
+    .side-nav button:hover, .side-nav button.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Tarjetas de Contenido */
+    .content-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .tab-section { display: none; animation: fadeIn 0.3s ease; }
+    .tab-section.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .span-2 { grid-column: span 2; }
+
+    /* Estilos de los Temas Visuales */
+    .theme-preview {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .theme-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .theme-dot.selected { border-color: var(--text-main); }
+
+    /* Listas y Tablas de Catálogo */
+    #lista-categorias-config { list-style: none; padding: 0; margin-top: 1rem; }
+    .prod-table-container { overflow-x: auto; margin-top: 20px; }
+    table { font-size: 0.85rem; }
+    td, th { padding: 8px; }
+  </style>
 </head>
 <body>
 
-<nav class="container-fluid">
-  <ul><li><strong>MRS TPV</strong></li></ul>
-  <ul>
-    <li id="rol-info"></li>
-    <li><a href="caja.html">Caja</a></li>
-    <li><a href="historial.html">Historial</a></li>
-    <li><a href="exportes.html">Exportes</a></li>
-    <li><a href="configuracion.html">Configuración</a></li>
-    <li><a href="#" onclick="logout()">Cerrar sesión</a></li>
-  </ul>
-</nav>
+<div id="navbar-app"></div>
 
 <main class="container">
-  <h3>⚙️ Panel PRO</h3>
+  <div class="main-grid">
+    
+    <aside class="side-nav">
+      <h5 style="margin-left:15px; font-size: 0.9rem; color: #888;">AJUSTES</h5>
+      <button onclick="switchTab('empresa', this)" class="active">🏢 Empresa</button>
+      <button onclick="switchTab('documentos', this)">🧾 Documentos</button>
+      <button onclick="switchTab('catalogo', this)">📂 Catálogo</button>
+      <button onclick="switchTab('temas', this)">🎨 Temas e Interfaz</button>
+      <hr>
+      <button class="primary" onclick="guardarPanelPro()">💾 Guardar Cambios</button>
+    </aside>
 
-  <section>
-    <h4>🏢 Empresa</h4>
-    <input id="nombre" placeholder="Nombre comercial">
-    <input id="razon" placeholder="Razón social">
-    <input id="cif" placeholder="CIF">
-    <input id="direccion" placeholder="Dirección">
-    <input id="telefono" placeholder="Teléfono">
-    <input id="email" placeholder="Email">
-    <input id="web" placeholder="Web">
-    <label>Logo de la empresa
-  <input type="file" id="logo" accept="image/*">
-</label>
+    <div class="content-wrapper">
 
-<img id="logo-preview"
-     style="display:none;max-width:150px;margin-top:10px">
-  </section>
+      <section id="catalogo" class="tab-section">
+        <article class="content-card">
+          <div class="grid">
+            
+            <div style="border-right: 1px solid var(--border-color); padding-right: 20px;">
+              <h4>📁 Familias</h4>
+              <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <input type="hidden" id="cat-id-edit"> 
+                
+                <label>Nombre</label>
+                <input id="cat-nombre" placeholder="Ej: Fundas">
+                
+                <label>Fiscal</label>
+                <select id="cat-fiscal">
+                  <option value="IVA">Solo IVA (Servicios)</option>
+                  <option value="IVA_RE">IVA + RE (Venta)</option>
+                </select>
 
-  <section>
-    <h4>🧾 Documentos</h4>
-    <label><input type="checkbox" id="doc-logo"> Logo</label>
-    <label><input type="checkbox" id="doc-direccion"> Dirección</label>
-    <label><input type="checkbox" id="doc-telefono"> Teléfono</label>
-    <label><input type="checkbox" id="doc-email"> Email</label>
-    <label><input type="checkbox" id="doc-web"> Web</label>
-    <label><input type="checkbox" id="doc-pago"> Pago</label>
-    <label><input type="checkbox" id="doc-cambio"> Cambio</label>
-    <textarea id="pie" rows="3" placeholder="Texto legal"></textarea>
-  </section>
+                <label style="font-size: 0.75rem;">Imagen (opcional)
+                  <input type="file" id="cat-img" accept="image/*">
+                </label>
 
-<!-- PPRUEBAS DE LAS CATEGORIAS -->
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                  <button id="btn-cat-guardar" class="outline" onclick="crearCategoria()" style="flex: 2; margin: 0; font-size: 0.8rem;">Crear/Guardar</button>
+                  <button id="btn-cat-cancelar" onclick="limpiarFormCat()" style="flex: 1; display: none; background: #ff4d4d; border: none; margin: 0;">✖</button>
+                </div>
+              </div>
+              <ul id="lista-categorias-config"></ul>
+            </div>
 
-<hr>
+            <div>
+              <h4>📦 Nuevo Producto</h4>
+              <div class="input-group">
+                <input id="prod-nombre" placeholder="Nombre del artículo" class="span-2">
+                
+                <select id="prod-cat-select" class="span-2">
+                  <option value="">Selecciona Familia...</option>
+                </select>
 
-<article>
-  <h3>📂 Categorías</h3>
+                <label>Precio Venta (PVP)
+                  <input type="number" id="prod-venta" step="0.01" placeholder="0.00">
+                </label>
 
-  <label>
-    Nombre
-    <input id="cat-nombre">
-  </label>
+                <label>Foto Producto
+                  <input type="file" id="prod-img" accept="image/*">
+                </label>
+              </div>
+              <button style="width: 100%; margin-top: 20px;" onclick="guardarProducto()">✨ Guardar Producto</button>
 
-  <label>
-    Tipo fiscal
-    <select id="cat-fiscal">
-      <option value="IVA">Solo IVA</option>
-      <option value="IVA_RE">IVA + Recargo</option>
-    </select>
-  </label>
+              <hr>
+              <h5>Productos en Sistema</h5>
+              <div class="prod-table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>PVP</th>
+                      <th>Familia</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-productos-body">
+                    </tbody>
+                </table>
+              </div>
+            </div>
 
-  <button onclick="crearCategoria()">Crear categoría</button>
+          </div>
+        </article>
+      </section>
 
-  <ul id="lista-categorias"></ul>
-</article>
+      <section id="empresa" class="tab-section active">
+        <article class="content-card">
+          <h3>Datos de Empresa</h3>
+          <div class="input-group">
+            <input id="nombre" placeholder="Nombre comercial">
+            <input id="razon" placeholder="Razón social">
+            <input id="cif" placeholder="CIF/NIF">
+            <input id="telefono" placeholder="Teléfono">
+            <input id="email" placeholder="Email de contacto" class="span-2">
+            <input id="direccion" placeholder="Dirección completa" class="span-2">
+          </div>
+          <hr>
+          <label>Logotipo Corporativo
+            <input type="file" id="logo" accept="image/*">
+          </label>
+          <img id="logo-preview" style="display:none; max-width:180px; border-radius: 10px; margin-top:10px;">
+        </article>
+      </section>
 
-<hr>
+      <section id="documentos" class="tab-section">
+        <article class="content-card">
+          <h3>Configuración de Impresión</h3>
+          <p>Elige qué datos se muestran en Tickets y Facturas.</p>
+          <div class="input-group" style="background: #f9fafb; padding: 20px; border-radius: 10px;">
+            <label><input type="checkbox" id="doc-logo"> Logo</label>
+            <label><input type="checkbox" id="doc-direccion"> Dirección</label>
+            <label><input type="checkbox" id="doc-telefono"> Teléfono</label>
+            <label><input type="checkbox" id="doc-email"> Email</label>
+            <label><input type="checkbox" id="doc-web"> Web</label>
+            <label><input type="checkbox" id="doc-pago"> Modo Pago</label>
+          </div>
+          <br>
+          <textarea id="pie" rows="4" placeholder="Pie de página legal..."></textarea>
+        </article>
+      </section>
 
-<article>
-  <h3>📁 Subcategorías</h3>
+      <section id="temas" class="tab-section">
+        <article class="content-card">
+          <h3>Personalización del Sistema</h3>
+          <label><input type="checkbox" id="nav-mostrar-logo"> Mostrar logo en la barra de navegación</label>
+          
+          <hr>
+          <h5>Perfil de Color</h5>
+          <div class="theme-preview">
+            <div class="theme-dot" style="background: #3b82f6;" onclick="setTheme('#3b82f6')"></div>
+            <div class="theme-dot" style="background: #10b981;" onclick="setTheme('#10b981')"></div>
+            <div class="theme-dot" style="background: #ef4444;" onclick="setTheme('#ef4444')"></div>
+            <div class="theme-dot" style="background: #8b5cf6;" onclick="setTheme('#8b5cf6')"></div>
+            <div class="theme-dot" style="background: #f59e0b;" onclick="setTheme('#f59e0b')"></div>
+          </div>
+          <br>
+          <label>O elige un color personalizado:
+            <input type="color" id="color" oninput="setTheme(this.value)">
+          </label>
 
-  <label>
-    Nombre
-    <input id="sub-nombre">
-  </label>
+          <hr>
+          <h5>Modo de Pantalla</h5>
+          <select id="tema" onchange="cambiarModo(this.value)">
+            <option value="claro">☀️ Modo Claro</option>
+            <option value="oscuro">🌙 Modo Noche</option>
+          </select>
+        </article>
+      </section>
 
-  <label>
-    Categoría
-    <select id="sub-categoria"></select>
-  </label>
-
-  <button onclick="crearSubcategoria()">Crear subcategoría</button>
-
-  <ul id="lista-subcategorias"></ul>
-</article>
-
-<hr>
-
-<article>
-  <h3>🛒 Productos / Reparaciones</h3>
-
-  <label>
-    Nombre
-    <input id="prod-nombre">
-  </label>
-
-  <label>
-    Descripción
-    <input id="prod-desc">
-  </label>
-
-  <label>
-    Categoría
-    <select id="prod-categoria"></select>
-  </label>
-
-  <label>
-    Subcategoría
-    <select id="prod-subcategoria"></select>
-  </label>
-
-  <label>
-    Precio coste
-    <input type="number" id="prod-coste">
-  </label>
-
-  <label>
-    Precio venta
-    <input type="number" id="prod-venta">
-  </label>
-
-  <label>
-    Tipo
-    <select id="prod-tipo">
-      <option value="reparacion">Reparación (IVA)</option>
-      <option value="producto">Producto (IVA + Recargo)</option>
-    </select>
-  </label>
-
-  <button onclick="crearProducto()">Crear producto</button>
-</article>
-
-
-<!--000000000000000000000000000000000-->
-
-  <section>
-    <h4>🎨 Apariencia</h4>
-    <select id="tema">
-      <option value="claro">Claro</option>
-      <option value="oscuro">Oscuro</option>
-    </select>
-    <input type="color" id="color">
-  </section>
-
-  <button onclick="guardarPanelPro()">💾 Guardar configuración</button>
+    </div>
+  </div>
 </main>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const rol = sessionStorage.getItem("rol");
-  if (!rol) return location.href = "login.html";
-  if (rol !== "admin") return location.href = "caja.html";
-  document.getElementById("rol-info").innerText = "Rol: " + rol;
-});
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.side-nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
 
+  function setTheme(color) {
+    document.documentElement.style.setProperty('--accent', color);
+    const colorInput = document.getElementById('color');
+    if(colorInput) colorInput.value = color;
+  }
+
+  function cambiarModo(modo) {
+    if(modo === 'oscuro') {
+      document.documentElement.style.setProperty('--bg-app', '#1a202c');
+      document.documentElement.style.setProperty('--bg-card', '#2d3748');
+      document.documentElement.style.setProperty('--text-main', '#f7fafc');
+      document.documentElement.style.setProperty('--border-color', '#4a5568');
+    } else {
+      document.documentElement.style.setProperty('--bg-app', '#f4f7f9');
+      document.documentElement.style.setProperty('--bg-card', '#ffffff');
+      document.documentElement.style.setProperty('--text-main', '#2d3748');
+      document.documentElement.style.setProperty('--border-color', '#e2e8f0');
+    }
+  }
 </script>
 
-<script src="js/auth.js" type="module"></script>
-
-<script type="module">
-  import "./js/auth.js";
-  import "./js/config-panel-pro.js";
-
-  window.addEventListener("DOMContentLoaded", async () => {
-    const modulo = await import("./js/config.js");
-    console.log("config.js cargado correctamente");
-  });
-</script>
-
+<script src="js/navbar.js" type="module"></script>
+<script type="module" src="js/config-panel-pro.js"></script>
 
 </body>
 </html>

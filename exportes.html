@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- fin de los estilos css-->
   <meta charset="UTF-8">
   <title>MRS TPV · Exportes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,21 +15,12 @@
 </head>
 <body>
 
-<nav class="container-fluid">
-  <ul>
-    <li><strong>MRS TPV</strong></li>
-  </ul>
-  <ul>
-    <li id="rol-info"></li>
+<!-- navbar importante -->
+  <div id="navbar-app"></div> 
 
-    <li><a href="caja.html" id="caja-link">Caja</a></li>
-    <li><a href="historial.html" id="historial-link">Historial</a></li>
-    <li><a href="exportes.html" id="exportes-link">Exportes</a></li>
-    <li><a href="configuracion.html" id="config-link">Configuración</a></li>
+  <script src="js/navbar.js" type="module"></script>
 
-    <li><a href="#" onclick="logout()" role="button">Cerrar sesión</a></li>
-  </ul>
-</nav>
+<!-- fin navbar -->
 
 
 <main class="container">

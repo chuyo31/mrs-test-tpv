@@ -26,10 +26,11 @@ export async function cargarEmpresaDocs() {
   if (e.doc_web && e.web) datos.push(e.web);
 
   return {
-    nombre: e.nombre || "TU EMPRESA",
+    nombre: e.nombre || "MRS TPV",
     datosHtml: datos.join("<br>"),
     pie: e.pie || "",
-    logo: e.logo_url || null,        // 👈 CLAVE
-    mostrarLogo: e.doc_logo === true // 👈 CONTROL VISUAL
+    logo: e.logo_url || null,
+    mostrarLogo: e.doc_logo === true,
+    mostrarLogoNavbar: e.nav_mostrar_logo === true // 👈 ESTA LÍNEA ES VITAL
   };
 }

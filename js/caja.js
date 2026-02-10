@@ -1,324 +1,264 @@
 import { db } from "./firebase.js";
-
 import {
-  collection,
-  getDocs,
-  addDoc,
-  serverTimestamp,
-  query,
-  where,
-  limit
+  collection, getDocs, getDoc, addDoc, updateDoc, doc,
+  serverTimestamp, query, where, limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 import { generarNumeroLegal } from "./numeracion.js";
-
-/* =========================
-   ESTADO GLOBAL
-========================= */
 
 let ventaActual = [];
 let metodoPago = null;
-let efectivoEntregado = 0;
 let cajaActualId = null;
+let categoriasLocal = [];
 
 /* =========================
-   CAJA DIARIA
+   ESTADO DE CAJA
 ========================= */
-
 async function comprobarCajaAbierta() {
-  const q = query(
-    collection(db, "cash_registers"),
-    where("estado", "==", "abierta"),
-    limit(1)
-  );
-
-  const snap = await getDocs(q);
-
-  const abrir = document.getElementById("abrir-caja");
-  const zona = document.getElementById("zona-caja");
-
-  if (snap.empty) {
-    abrir.style.display = "block";
-    zona.style.display = "none";
-    cajaActualId = null;
-  } else {
-    cajaActualId = snap.docs[0].id;
-    abrir.style.display = "none";
-    zona.style.display = "block";
-  }
+  const q = query(collection(db, "cash_registers"), where("estado", "==", "abierta"), limit(1));
+  try {
+    const snap = await getDocs(q);
+    const abrir = document.getElementById("abrir-caja");
+    const zona = document.getElementById("zona-caja");
+    
+    if (snap.empty) {
+      cajaActualId = null;
+      if (abrir) abrir.style.display = "block";
+      if (zona) zona.style.display = "none";
+    } else {
+      cajaActualId = snap.docs[0].id;
+      if (abrir) abrir.style.display = "none";
+      if (zona) zona.style.display = "block";
+      cargarCategoriasCaja();
+    }
+  } catch (e) { console.error("Error al comprobar caja:", e); }
 }
 
-window.abrirCaja = async function () {
-  if (sessionStorage.getItem("rol") !== "admin") {
-    alert("Solo el administrador puede abrir la caja");
-    return;
-  }
-
-  const fondo = Number(document.getElementById("fondo-inicial").value);
-  if (isNaN(fondo) || fondo < 0) {
-    alert("Fondo inicial inválido");
-    return;
-  }
-
-  await addDoc(collection(db, "cash_registers"), {
-    fecha_apertura: serverTimestamp(),
-    usuario_apertura: sessionStorage.getItem("uid"),
-    fondo_inicial: fondo,
-    estado: "abierta"
-  });
-
-  await comprobarCajaAbierta();
+window.abrirCaja = async () => {
+  const fondoInput = document.getElementById("fondo-inicial");
+  const fondo = parseFloat(fondoInput.value);
+  if (isNaN(fondo) || fondo < 0) return alert("Por favor, introduce un fondo inicial válido.");
+  
+  try {
+    await addDoc(collection(db, "cash_registers"), {
+      fecha_apertura: serverTimestamp(),
+      fondo_inicial: fondo,
+      estado: "abierta",
+      // Aquí podrías añadir el email del usuario si usas Auth
+    });
+    fondoInput.value = "";
+    comprobarCajaAbierta();
+  } catch (e) { alert("Error al abrir caja"); }
 };
 
 /* =========================
-   CATEGORÍAS / PRODUCTOS
+   GESTIÓN DE PRODUCTOS
 ========================= */
-
-async function cargarCategorias() {
-  const cont = document.getElementById("categorias");
-  cont.innerHTML = "";
-
+async function cargarCategoriasCaja() {
+  const divCat = document.getElementById("categorias");
+  if (!divCat) return;
   const snap = await getDocs(collection(db, "categories"));
-  snap.forEach(d => {
-    const c = d.data();
-    if (!c.activa) return;
-
+  divCat.innerHTML = "";
+  categoriasLocal = [];
+  
+  snap.forEach(docSnap => {
+    const cat = { id: docSnap.id, ...docSnap.data() };
+    categoriasLocal.push(cat);
     const btn = document.createElement("button");
-    btn.textContent = c.nombre;
-    btn.onclick = () => cargarProductos(d.id);
-    cont.appendChild(btn);
+    btn.innerText = cat.nombre;
+    btn.className = "secondary";
+    btn.style = "margin: 5px; min-width: 120px;";
+    btn.onclick = () => cargarProductosCaja(docSnap.id);
+    divCat.appendChild(btn);
   });
 }
 
-async function cargarProductos(categoryId) {
-  const cont = document.getElementById("productos");
-  cont.innerHTML = "";
+async function cargarProductosCaja(catId) {
+  const divProd = document.getElementById("productos");
+  const q = query(collection(db, "products"), where("categoria_id", "==", catId));
+  const snap = await getDocs(q);
+  divProd.innerHTML = "";
+  
+  if (snap.empty) divProd.innerHTML = "<small>No hay productos en esta familia</small>";
 
-  const snap = await getDocs(collection(db, "products"));
-  snap.forEach(d => {
-    const p = d.data();
-    if (!p.activo || p.category_id !== categoryId) return;
-
+  snap.forEach(docSnap => {
+    const p = docSnap.data();
+    const id = docSnap.id;
     const btn = document.createElement("button");
-    btn.textContent = `${p.nombre} (${p.precio_venta}€)`;
-    btn.onclick = () => añadirProducto(d.id, p);
-    cont.appendChild(btn);
+    btn.className = "outline";
+    btn.style = "margin: 5px; height: auto; padding: 10px;";
+    btn.innerHTML = `${p.nombre}<br><strong>${parseFloat(p.pvp).toFixed(2)}€</strong>`;
+    btn.onclick = () => agregarProductoVenta(id, p);
+    divProd.appendChild(btn);
   });
 }
 
-/* =========================
-   VENTA
-========================= */
-
-function añadirProducto(id, producto) {
-  if (!cajaActualId) {
-    alert("Debes abrir la caja");
-    return;
-  }
-
-  const item = ventaActual.find(i => i.id === id);
-  if (item) {
-    item.cantidad++;
+function agregarProductoVenta(id, data) {
+  const existe = ventaActual.find(i => i.id === id);
+  if (existe) {
+    existe.cantidad++;
   } else {
+    const cat = categoriasLocal.find(c => c.id === data.categoria_id);
     ventaActual.push({
-      id,
-      nombre: producto.nombre,
-      precio: producto.precio_venta,
-      iva: producto.iva,
-      recargo: producto.recargo,
-      cantidad: 1
+      id: id,
+      nombre: data.nombre,
+      precio: parseFloat(data.pvp) || 0,
+      cantidad: 1,
+      tipoFiscal: cat ? cat.tipoFiscal : "IVA",
+      categoria_id: data.categoria_id
     });
   }
-
-  renderVenta();
-  calcularCambio();
+  renderizarTabla();
 }
 
-function cambiarPrecio(id, nuevoPrecio) {
-  const item = ventaActual.find(i => i.id === id);
-  const p = Number(nuevoPrecio);
-  if (!item || isNaN(p) || p <= 0) return;
-
-  item.precio = p;
-  renderVenta();
-  calcularCambio();
-}
-
-function aumentarCantidad(id) {
-  const item = ventaActual.find(i => i.id === id);
-  if (!item) return;
-  item.cantidad++;
-  renderVenta();
-  calcularCambio();
-}
-
-function disminuirCantidad(id) {
-  const item = ventaActual.find(i => i.id === id);
-  if (!item) return;
-
-  item.cantidad--;
-  if (item.cantidad <= 0) {
-    eliminarLinea(id);
-  } else {
-    renderVenta();
-    calcularCambio();
-  }
-}
-
-function eliminarLinea(id) {
-  ventaActual = ventaActual.filter(i => i.id !== id);
-  renderVenta();
-  calcularCambio();
-}
-
-/* =========================
-   PAGO
-========================= */
-
-window.seleccionarPago = function (tipo) {
-  metodoPago = tipo;
-
-  document.getElementById("pago-seleccionado").innerText =
-    tipo === "efectivo" ? "Efectivo" : "Tarjeta";
-
-  document.getElementById("bloque-efectivo").style.display =
-    tipo === "efectivo" ? "block" : "none";
-};
-
-function calcularCambio() {
-  if (metodoPago !== "efectivo") return;
-
-  efectivoEntregado = Number(
-    document.getElementById("efectivo-entregado").value || 0
-  );
-
-  const total = Number(
-    document.getElementById("total-venta").innerText.replace(" €", "")
-  );
-
-  document.getElementById("cambio").innerText =
-    efectivoEntregado >= total
-      ? (efectivoEntregado - total).toFixed(2) + " €"
-      : "—";
-}
-
-/* =========================
-   GUARDAR VENTA + TICKET
-========================= */
-
-window.guardarVenta = async function () {
-  if (!cajaActualId) return alert("Caja no abierta");
-  if (!ventaActual.length) return alert("No hay productos");
-  if (!metodoPago) return alert("Selecciona forma de pago");
-
-  let subtotal = 0, totalIVA = 0, totalRecargo = 0;
-
-  const lineas = ventaActual.map(i => {
-    const base = i.precio * i.cantidad;
-    subtotal += base;
-    totalIVA += base * (i.iva / 100);
-    totalRecargo += base * (i.recargo / 100);
-
-    return {
-      nombre: i.nombre,
-      cantidad: i.cantidad,
-      precio: i.precio,
-      base
-    };
-  });
-
-  const total = subtotal + totalIVA + totalRecargo;
-
-  if (metodoPago === "efectivo" && efectivoEntregado < total) {
-    return alert("Efectivo insuficiente");
-  }
-
-  const numeroLegal = await generarNumeroLegal(db, "tickets");
-
-  const ventaRef = await addDoc(collection(db, "sales"), {
-    fecha: serverTimestamp(),
-    caja_id: cajaActualId,
-    tipo_documento: "ticket",
-    numero_legal: numeroLegal,
-    metodo_pago: metodoPago,
-    efectivo_entregado: metodoPago === "efectivo" ? efectivoEntregado : null,
-    cambio: metodoPago === "efectivo" ? efectivoEntregado - total : null,
-    subtotal,
-    total_iva: totalIVA,
-    total_recargo: totalRecargo,
-    total,
-    lineas
-  });
-
-  window.open(`ticket.html?id=${ventaRef.id}`, "_blank");
-
-  ventaActual = [];
-  metodoPago = null;
-  efectivoEntregado = 0;
-  document.getElementById("pago-seleccionado").innerText = "—";
-  document.getElementById("bloque-efectivo").style.display = "none";
-  renderVenta();
+window.editarPrecio = (id) => {
+    const item = ventaActual.find(i => i.id === id);
+    if (!item) return;
+    const nuevoPVP = prompt(`Editar precio final para: ${item.nombre}`, item.precio);
+    if (nuevoPVP !== null && !isNaN(nuevoPVP) && nuevoPVP >= 0) {
+        item.precio = parseFloat(nuevoPVP);
+        renderizarTabla();
+    }
 };
 
 /* =========================
-   RENDER
+   RENDER Y CÁLCULOS
 ========================= */
-
-function renderVenta() {
-  const tbody = document.getElementById("venta-lista");
+function renderizarTabla() {
+  const tbody = document.querySelector("#tabla-venta tbody");
+  if (!tbody) return;
   tbody.innerHTML = "";
 
-  let subtotal = 0, totalIVA = 0, totalRecargo = 0;
+  let subtotalGeneral = 0, totalIva = 0, totalRec = 0;
 
   ventaActual.forEach(i => {
-    const base = i.precio * i.cantidad;
-    subtotal += base;
-    totalIVA += base * (i.iva / 100);
-    totalRecargo += base * (i.recargo / 100);
+    const pvpTotalFila = i.precio * i.cantidad;
+    const divisor = (i.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+    const baseFila = pvpTotalFila / divisor;
+    const ivaFila = baseFila * 0.21;
+    const reFila = (i.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
 
-    tbody.innerHTML += `
-      <tr>
-        <td>${i.nombre}</td>
-        <td>
-          <button onclick="disminuirCantidad('${i.id}')">−</button>
-          ${i.cantidad}
-          <button onclick="aumentarCantidad('${i.id}')">+</button>
-        </td>
-        <td>
-          <input type="number" step="0.01" value="${i.precio}"
-            style="width:70px"
-            onchange="cambiarPrecio('${i.id}', this.value)"> €
-        </td>
-        <td>${base.toFixed(2)} €</td>
-        <td>
-          <button onclick="eliminarLinea('${i.id}')">🗑️</button>
-        </td>
-      </tr>
+    subtotalGeneral += baseFila;
+    totalIva += ivaFila;
+    totalRec += reFila;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i.nombre}</td>
+      <td>
+        <div class="acciones" style="display:flex; align-items:center; gap:8px;">
+          <button class="outline" onclick="cambiarCantidad('${i.id}', -1)" style="padding:2px 10px;">−</button>
+          <strong>${i.cantidad}</strong>
+          <button class="outline" onclick="cambiarCantidad('${i.id}', 1)" style="padding:2px 10px;">+</button>
+        </div>
+      </td>
+      <td onclick="editarPrecio('${i.id}')" style="cursor:pointer; color: var(--primary); text-decoration: underline;">
+        ${i.precio.toFixed(2)}€
+      </td>
+      <td class="right">${pvpTotalFila.toFixed(2)}€</td>
+      <td><button class="secondary" onclick="eliminarFila('${i.id}')" style="padding:4px; margin:0;">🗑️</button></td>
     `;
+    tbody.appendChild(tr);
   });
 
-  document.getElementById("subtotal").innerText = subtotal.toFixed(2) + " €";
-  document.getElementById("total-iva").innerText = totalIVA.toFixed(2) + " €";
-  document.getElementById("total-recargo").innerText = totalRecargo.toFixed(2) + " €";
-  document.getElementById("total-venta").innerText =
-    (subtotal + totalIVA + totalRecargo).toFixed(2) + " €";
+  const totalFinal = subtotalGeneral + totalIva + totalRec;
+  document.getElementById("subtotal").innerText = subtotalGeneral.toFixed(2) + " €";
+  document.getElementById("total-iva").innerText = totalIva.toFixed(2) + " €";
+  document.getElementById("total-recargo").innerText = totalRec.toFixed(2) + " €";
+  document.getElementById("total-venta").innerText = totalFinal.toFixed(2) + " €";
+  
+  if (metodoPago === 'efectivo') calcularCambio();
 }
 
 /* =========================
-   EXPONER
+   ACCIONES DE COBRO
 ========================= */
+window.cambiarCantidad = (id, delta) => {
+  const item = ventaActual.find(i => i.id === id);
+  if (item) {
+    item.cantidad += delta;
+    if (item.cantidad <= 0) ventaActual = ventaActual.filter(i => i.id !== id);
+    renderizarTabla();
+  }
+};
 
-window.cambiarPrecio = cambiarPrecio;
-window.aumentarCantidad = aumentarCantidad;
-window.disminuirCantidad = disminuirCantidad;
-window.eliminarLinea = eliminarLinea;
-window.calcularCambio = calcularCambio;
+window.eliminarFila = (id) => {
+  ventaActual = ventaActual.filter(i => i.id !== id);
+  renderizarTabla();
+};
+
+window.seleccionarPago = (tipo) => {
+  metodoPago = tipo;
+  document.querySelectorAll('.btn-pago').forEach(b => b.classList.add('outline'));
+  event.currentTarget.classList.remove('outline');
+  document.getElementById("pago-seleccionado").innerText = tipo.toUpperCase();
+  document.getElementById("bloque-efectivo").style.display = (tipo === 'efectivo') ? "block" : "none";
+  renderizarTabla();
+};
+
+window.calcularCambio = () => {
+  const total = parseFloat(document.getElementById("total-venta").innerText) || 0;
+  const entregado = parseFloat(document.getElementById("efectivo-entregado").value) || 0;
+  const cambio = entregado - total;
+  document.getElementById("cambio").innerText = (cambio > 0 ? cambio : 0).toFixed(2) + " €";
+};
 
 /* =========================
-   INIT
+   GUARDAR VENTA (FINAL)
 ========================= */
+window.guardarVenta = async () => {
+  // 1. Validaciones previas
+  if (!cajaActualId) return alert("Error: La caja no está abierta.");
+  if (ventaActual.length === 0) return alert("Añade productos a la venta.");
+  if (!metodoPago) return alert("Selecciona un método de pago.");
+  
+  const totalVenta = parseFloat(document.getElementById("total-venta").innerText);
+  const entregado = parseFloat(document.getElementById("efectivo-entregado")?.value) || totalVenta;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await comprobarCajaAbierta();
-  cargarCategorias();
-});
+  if (metodoPago === 'efectivo' && entregado < totalVenta) {
+      return alert("El efectivo entregado es insuficiente.");
+  }
+
+  try {
+    // 2. Comprobar que la caja sigue abierta (Seguridad Verifactu)
+    const cajaSnap = await getDoc(doc(db, "cash_registers", cajaActualId));
+    if (!cajaSnap.exists() || cajaSnap.data().estado !== "abierta") {
+        alert("La caja ha sido cerrada desde otro terminal. Reiniciando...");
+        location.reload();
+        return;
+    }
+
+    // 3. Generar número legal y guardar
+    const num = await generarNumeroLegal(db, "tickets");
+    
+    const docRef = await addDoc(collection(db, "sales"), {
+      numero_legal: num,
+      fecha: serverTimestamp(),
+      lineas: ventaActual,
+      subtotal: parseFloat(document.getElementById("subtotal").innerText),
+      total_iva: parseFloat(document.getElementById("total-iva").innerText),
+      total_recargo: parseFloat(document.getElementById("total-recargo").innerText),
+      total: totalVenta,
+      metodo_pago: metodoPago,
+      caja_id: cajaActualId, // Vínculo para el Cierre Z
+      efectivo_entregado: entregado
+    });
+
+    // 4. Resetear interfaz
+    alert("Venta guardada: " + num);
+    ventaActual = [];
+    metodoPago = null;
+    document.getElementById("pago-seleccionado").innerText = "—";
+    document.getElementById("bloque-efectivo").style.display = "none";
+    document.getElementById("efectivo-entregado").value = "";
+    renderizarTabla();
+    
+    // 5. Imprimir
+    window.open(`ticket.html?id=${docRef.id}`, "_blank");
+
+  } catch (err) {
+    console.error("Error al guardar venta:", err);
+    alert("Hubo un error al guardar la venta.");
+  }
+};
+
+document.addEventListener("DOMContentLoaded", comprobarCajaAbierta);
