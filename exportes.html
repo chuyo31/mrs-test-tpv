@@ -1,93 +1,76 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!--estilos css-->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<link rel="stylesheet" href="css/style.css">
-
-<!-- fin de los estilos css-->
   <meta charset="UTF-8">
   <title>MRS TPV · Exportes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf-autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-<!-- navbar importante -->
   <div id="navbar-app"></div> 
 
+  <main class="container">
+    <hgroup>
+      <h3>📊 Exportes para asesoría</h3>
+      <p>Genera informes fiscales y archivos CSV para contabilidad</p>
+    </hgroup>
+
+    <article class="content-card">
+      <div class="grid">
+        <label for="fecha-desde">
+          Desde
+          <input type="date" id="fecha-desde">
+        </label>
+        <label for="fecha-hasta">
+          Hasta
+          <input type="date" id="fecha-hasta">
+        </label>
+      </div>
+      <button class="primary" onclick="calcularResumen()">🔍 Calcular Resumen Fiscal</button>
+    </article>
+
+    <article id="resultado" class="content-card" style="display:none;">
+      <header>
+        <h4 style="margin:0;">📋 Resumen Fiscal Calculado</h4>
+      </header>
+
+      <ul class="resumen-fiscal-list">
+        <li><span>Base IVA (21%):</span> <strong id="res-base-iva">0.00€</strong></li>
+        <li><span>IVA Repercutido:</span> <strong id="res-iva">0.00€</strong></li>
+        <li><span>Base Recargo (RE):</span> <strong id="res-base-re">0.00€</strong></li>
+        <li><span>Recargo de Equivalencia:</span> <strong id="res-recargo">0.00€</strong></li>
+        <li class="fila-total-factura">
+          <span>TOTAL VENTAS:</span> <strong id="res-total" style="color: var(--primary);">0.00€</strong>
+        </li>
+      </ul>
+
+      <footer class="grid" style="margin-top: 2rem;">
+        <button class="secondary outline" onclick="exportarCSV()">📄 Descargar CSV</button>
+        <button class="secondary outline" onclick="exportarExcel()">📊 Descargar Excel</button>
+      </footer>
+    </article>
+  </main>
+
   <script src="js/navbar.js" type="module"></script>
+  <script src="js/auth.js" type="module"></script>
+  <script src="js/exportes.js" type="module"></script>
 
-<!-- fin navbar -->
-
-
-<main class="container">
-
-  <h3>Exportes para asesoría</h3>
-
-  <div class="grid">
-    <label>
-      Desde
-      <input type="date" id="fecha-desde">
-    </label>
-
-    <label>
-      Hasta
-      <input type="date" id="fecha-hasta">
-    </label>
-  </div>
-
-  <button onclick="calcularResumen()">
-    📊 Calcular resumen
-  </button>
-
-  <hr>
-
-  <article id="resultado" style="display:none;">
-    <h4>Resumen fiscal</h4>
-
-    <ul>
-      <li>Total ventas: <strong id="res-total"></strong></li>
-      <li>Base IVA (reparaciones): <strong id="res-base-iva"></strong></li>
-      <li>IVA repercutido: <strong id="res-iva"></strong></li>
-      <li>Base recargo (ventas): <strong id="res-base-re"></strong></li>
-      <li>Recargo equivalencia: <strong id="res-recargo"></strong></li>
-    </ul>
-
-    <button onclick="exportarCSV()">
-      ⬇ Exportar CSV
-    </button>
-  </article>
-
-</main>
-
-<script src="js/auth.js" type="module"></script>
-<script src="js/exportes.js" type="module"></script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const rol = sessionStorage.getItem("rol");
-
-    if (!rol) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    const rolInfo = document.getElementById("rol-info");
-    if (rolInfo) rolInfo.innerText = "Rol: " + rol;
-
-    if (rol !== "admin") {
-      const hide = ["config-link", "exportes-link"];
-      hide.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-      });
-    }
-  });
-</script>
-
-
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const rol = sessionStorage.getItem("rol");
+      if (!rol) return window.location.href = "login.html";
+      if (rol !== "admin") {
+        alert("Acceso restringido");
+        window.location.href = "caja.html";
+      }
+    });
+  </script>
 </body>
 </html>

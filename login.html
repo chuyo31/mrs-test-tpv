@@ -1,49 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!--estilos css-->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<link rel="stylesheet" href="css/style.css">
-
-<!-- fin de los estilos css-->
   <meta charset="UTF-8">
-  <title>MRS TPV · Login (V2)</title>
+  <title>MRS TPV · Inicio de Sesión</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="login-page">
 
-<nav class="container-fluid">
-  <ul>
-    <li><strong>MRS TPV</strong></li>
-  </ul>
-  <ul>
-    <li><small>V2 Test</small></li>
-  </ul>
-</nav>
+  <main class="container">
+    <article class="login-card content-card">
+      <header>
+        <hgroup>
+          <h2 style="color: var(--primary);">MRS TPV</h2>
+          <p>Identifícate para acceder al sistema</p>
+        </hgroup>
+      </header>
 
-<main class="container">
-  <article>
-    <hgroup>
-      <h2>Inicio de sesión</h2>
-      <h3>Entorno de pruebas</h3>
-    </hgroup>
+      <form onsubmit="event.preventDefault(); login();">
+        <label for="email">
+          Correo Electrónico
+          <input type="email" id="email" placeholder="ejemplo@correo.com" required>
+        </label>
 
-    <label>
-      Email
-      <input type="email" id="email" placeholder="admin@test.com">
-    </label>
+        <label for="password">
+          Contraseña
+          <input type="password" id="password" placeholder="••••••••" required>
+        </label>
 
-    <label>
-      Contraseña
-      <input type="password" id="password" placeholder="••••••••">
-    </label>
+        <button type="submit" class="primary">
+          🚀 Entrar al Sistema
+        </button>
+      </form>
+      
+      <footer style="text-align: center; margin-top: 1rem;">
+        <small style="opacity: 0.5;">Versión 3.0 · MRS Cloud</small>
+      </footer>
+    </article>
+  </main>
 
-    <button type="button" onclick="login()">Entrar</button>
-  </article>
-</main>
+  <script src="js/auth.js" type="module"></script>
 
-<script src="js/auth.js" type="module"></script>
 </body>
 </html>

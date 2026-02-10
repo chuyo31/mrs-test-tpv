@@ -1,0 +1,175 @@
+/* ==========================================
+   VARIABLES DINÁMICAS (REGLA DE ORO)
+   ========================================== */
+:root {
+    --primary: #3b82f6;
+    --primary-inverse: #ffffff;
+    --card-background-color: #ffffff;
+    --color: #11191f;
+    --background-color: #f4f7f9; /* Color de fondo de la pantalla */
+}
+
+/* Forzar que el fondo de la página use nuestra variable */
+body {
+    background-color: var(--background-color) !important;
+    color: var(--color) !important;
+}
+
+/* Ajustes de Layout tipo App */
+.main-grid { 
+    display: grid; 
+    grid-template-columns: 260px 1fr; 
+    gap: 25px; 
+    margin-top: 20px; 
+}
+
+/* Menú Lateral Adaptable */
+.side-nav {
+    background: var(--card-background-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    border: 1px solid var(--muted-border-color);
+}
+
+.side-nav button {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--color) !important; /* Forzar color de texto del panel */
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.side-nav button:hover {
+    background: rgba(125,125,125,0.1);
+}
+
+.side-nav button.active {
+    background: var(--primary) !important;
+    color: var(--primary-inverse) !important;
+}
+
+/* Tarjetas de Contenido y Artículos */
+.content-card, article {
+    background: var(--card-background-color) !important;
+    color: var(--color) !important;
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid var(--muted-border-color);
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+/* Forzar color en textos específicos para que no se pierdan al cambiar fondo */
+h1, h2, h3, h4, h5, h6, label, p, th, td, small {
+    color: var(--color) !important;
+}
+
+/* Sistema de Pestañas */
+.tab-section { display: none; }
+.tab-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(5px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Utilidades */
+.input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.span-2 { grid-column: span 2; }
+
+/* Inputs Adaptables */
+input, select, textarea {
+    background-color: rgba(125,125,125,0.05) !important;
+    color: var(--color) !important;
+    border: 1px solid var(--muted-border-color) !important;
+}
+
+/* ==========================================
+   ESTILOS CAJA (TPV)
+   ========================================== */
+#categorias, #productos { display: flex; flex-wrap: wrap; gap: 10px; }
+#productos button { min-width: 140px; text-align: center; line-height: 1.2; }
+
+.resumen-cobro {
+    background: var(--code-background-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--muted-border-color);
+    margin-top: 1rem;
+}
+
+.cobro-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--card-background-color);
+    border-top: 2px solid var(--primary);
+    padding: 1rem 0;
+    z-index: 100;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+}
+
+/* ==========================================
+   ESTILOS DE FACTURA E IMPRESIÓN (FIJOS)
+   ========================================== */
+@page { size: A4; margin: 15mm; }
+
+/* En impresión de facturas forzamos fondo blanco y texto negro SIEMPRE */
+.factura-body { 
+    background: white !important; 
+    color: #333 !important; 
+    padding: 0; 
+    margin: 0; 
+}
+
+.header-factura {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+}
+
+.empresa-info-factura img { max-height: 70px; margin-bottom: 10px; }
+.factura-meta h1 { margin: 0; font-size: 28px; color: var(--primary); font-weight: 300; }
+
+.tabla-factura { width: 100%; border-collapse: collapse; margin-top: 30px; }
+.tabla-factura th { background: var(--primary) !important; color: white !important; text-align: left; padding: 10px; }
+.tabla-factura td { padding: 10px; border-bottom: 1px solid #eee; color: #333 !important; }
+
+/* ==========================================
+   ESTILOS DE TICKET TÉRMICO (80mm)
+   ========================================== */
+.ticket-body { 
+    font-family: 'Courier New', Courier, monospace; 
+    width: 80mm; 
+    margin: auto; 
+    font-size: 12px; 
+    color: #000 !important; 
+    background: white !important;
+}
+
+.ticket-hr { border: 0; border-top: 1px dashed #000; margin: 10px 0; }
+.ticket-total { font-weight: bold; font-size: 15px; border-top: 1px solid #000; }
+
+/* ==========================================
+   LOGIN Y UTILIDADES
+   ========================================== */
+.login-page { display: flex; flex-direction: column; justify-content: center; min-height: 90vh; }
+.login-card { max-width: 450px; margin: 0 auto; width: 100%; }
+
+.badge-completado { background: rgba(46, 204, 113, 0.2); color: #27ae60; }
+.badge-anulado { background: rgba(231, 76, 60, 0.2); color: #c0392b; }
+
+@media print {
+    body { -webkit-print-color-adjust: exact; background: white !important; }
+    #navbar-app, button, .side-nav { display: none !important; }
+}

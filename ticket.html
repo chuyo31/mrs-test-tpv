@@ -1,55 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!--estilos css-->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<link rel="stylesheet" href="css/style.css">
-
-<!-- fin de los estilos css-->
   <meta charset="UTF-8">
-  <title>Ticket</title>
+  <title>Ticket · MRS TPV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: 'Courier New', Courier, monospace; width: 80mm; margin: auto; font-size: 12px; color: #000; }
-    hr { border: 0; border-top: 1px dashed #000; margin: 10px 0; }
-    table { width: 100%; border-collapse: collapse; }
-    .right { text-align: right; }
-    .center { text-align: center; }
-    .total { font-weight: bold; font-size: 14px; }
-    img { max-width: 120px; margin-bottom: 10px; filter: grayscale(1); }
-    .desglose td { font-size: 11px; padding-top: 2px; }
-    @media print {
-        body { width: 100%; margin: 0; }
-        @page { margin: 0; }
-    }
-  </style>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
+<body class="ticket-body">
 
-<body>
-
-  <div class="center" style="margin-top: 10px;">
-    <img id="empresa-logo" style="display:none">
+  <div class="center" style="margin-top: 10px; text-align: center;">
+    <img id="empresa-logo" class="ticket-logo" style="display:none">
     <br><strong id="empresa-nombre" style="font-size: 16px;"></strong><br>
-    <div id="empresa-datos" style="white-space: pre-wrap;"></div>
+    <div id="empresa-datos" style="white-space: pre-wrap; font-size: 11px;"></div>
   </div>
 
-  <hr>
+  <div class="ticket-hr"></div>
 
   <div>
     <strong>Ticket Nº:</strong> <span id="ticket-numero"></span><br>
     <strong>Fecha:</strong> <span id="ticket-fecha"></span>
   </div>
 
-  <hr>
+  <div class="ticket-hr"></div>
 
-  <table>
-    <tbody id="lineas"></tbody>
+  <table class="ticket-table">
+    <tbody id="lineas">
+      </tbody>
   </table>
 
-  <hr>
+  <div class="ticket-hr"></div>
 
-  <table class="desglose">
+  <table class="ticket-table ticket-desglose">
     <tr>
       <td>Base Imponible</td>
       <td class="right" id="subtotal">0.00 €</td>
@@ -62,25 +45,25 @@
       <td>Recargo RE</td>
       <td class="right" id="recargo">0.00 €</td>
     </tr>
-    <tr class="total">
+    <tr class="ticket-total">
       <td style="padding-top: 8px;">TOTAL</td>
       <td class="right" style="padding-top: 8px;" id="total">0.00 €</td>
     </tr>
   </table>
 
-  <hr>
+  <div class="ticket-hr"></div>
 
   <div id="bloque-pago">
     Forma de pago: <span id="metodo-pago"></span>
-    <div id="bloque-efectivo">
+    <div id="bloque-efectivo" style="margin-top: 5px;">
         Entregado: <span id="entregado">0.00 €</span><br>
         Cambio: <span id="cambio">0.00 €</span>
     </div>
   </div>
 
-  <hr>
+  <div class="ticket-hr"></div>
 
-  <div class="center" id="pie-legal" style="font-size: 10px; margin-bottom: 20px;"></div>
+  <div id="pie-legal" class="center" style="font-size: 10px; text-align: center; margin-bottom: 30px;"></div>
 
   <script src="js/ticket.js" type="module"></script>
 </body>

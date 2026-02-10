@@ -1,107 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!--estilos css-->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<link rel="stylesheet" href="css/style.css">
-
-<!-- fin de los estilos css-->
   <meta charset="UTF-8">
   <title>Configuración · MRS TPV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-  <style>
-    /* VARIABLES DE TEMA (Base) */
-    :root {
-      --bg-app: #f4f7f9;
-      --bg-card: #ffffff;
-      --text-main: #2d3748;
-      --border-color: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      --accent: #3b82f6;
-    }
-
-    /* Estilos de Layout tipo Programa */
-    body { background-color: var(--bg-app); color: var(--text-main); transition: all 0.3s ease; }
-    
-    .main-grid {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 25px;
-      margin-top: 20px;
-    }
-
-    /* Menú Lateral */
-    .side-nav {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      height: fit-content;
-      position: sticky;
-      top: 20px;
-    }
-
-    .side-nav button {
-      width: 100%;
-      text-align: left;
-      background: transparent;
-      border: none;
-      color: var(--text-main);
-      padding: 12px 15px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: 0.2s;
-    }
-
-    .side-nav button:hover, .side-nav button.active {
-      background: var(--accent);
-      color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    /* Tarjetas de Contenido */
-    .content-card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border-color);
-      margin-bottom: 2rem;
-    }
-
-    .tab-section { display: none; animation: fadeIn 0.3s ease; }
-    .tab-section.active { display: block; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-    .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .span-2 { grid-column: span 2; }
-
-    /* Estilos de los Temas Visuales */
-    .theme-preview {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .theme-dot {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      cursor: pointer;
-      border: 2px solid transparent;
-    }
-    .theme-dot.selected { border-color: var(--text-main); }
-
-    /* Listas y Tablas de Catálogo */
-    #lista-categorias-config { list-style: none; padding: 0; margin-top: 1rem; }
-    .prod-table-container { overflow-x: auto; margin-top: 20px; }
-    table { font-size: 0.85rem; }
-    td, th { padding: 8px; }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -111,87 +15,17 @@
   <div class="main-grid">
     
     <aside class="side-nav">
-      <h5 style="margin-left:15px; font-size: 0.9rem; color: #888;">AJUSTES</h5>
+      <h5 style="margin-left:15px; font-size: 0.8rem; opacity: 0.6;">AJUSTES</h5>
       <button onclick="switchTab('empresa', this)" class="active">🏢 Empresa</button>
       <button onclick="switchTab('documentos', this)">🧾 Documentos</button>
       <button onclick="switchTab('catalogo', this)">📂 Catálogo</button>
-      <button onclick="switchTab('temas', this)">🎨 Temas e Interfaz</button>
+      <button onclick="switchTab('temas', this)">🎨 Interfaz</button>
       <hr>
       <button class="primary" onclick="guardarPanelPro()">💾 Guardar Cambios</button>
+      <button class="outline secondary" onclick="restablecerInterfaz()" style="font-size: 0.7rem; border-color: rgba(125,125,125,0.3)">🔄 Resetear Colores</button>
     </aside>
 
     <div class="content-wrapper">
-
-      <section id="catalogo" class="tab-section">
-        <article class="content-card">
-          <div class="grid">
-            
-            <div style="border-right: 1px solid var(--border-color); padding-right: 20px;">
-              <h4>📁 Familias</h4>
-              <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
-                <input type="hidden" id="cat-id-edit"> 
-                
-                <label>Nombre</label>
-                <input id="cat-nombre" placeholder="Ej: Fundas">
-                
-                <label>Fiscal</label>
-                <select id="cat-fiscal">
-                  <option value="IVA">Solo IVA (Servicios)</option>
-                  <option value="IVA_RE">IVA + RE (Venta)</option>
-                </select>
-
-                <label style="font-size: 0.75rem;">Imagen (opcional)
-                  <input type="file" id="cat-img" accept="image/*">
-                </label>
-
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
-                  <button id="btn-cat-guardar" class="outline" onclick="crearCategoria()" style="flex: 2; margin: 0; font-size: 0.8rem;">Crear/Guardar</button>
-                  <button id="btn-cat-cancelar" onclick="limpiarFormCat()" style="flex: 1; display: none; background: #ff4d4d; border: none; margin: 0;">✖</button>
-                </div>
-              </div>
-              <ul id="lista-categorias-config"></ul>
-            </div>
-
-            <div>
-              <h4>📦 Nuevo Producto</h4>
-              <div class="input-group">
-                <input id="prod-nombre" placeholder="Nombre del artículo" class="span-2">
-                
-                <select id="prod-cat-select" class="span-2">
-                  <option value="">Selecciona Familia...</option>
-                </select>
-
-                <label>Precio Venta (PVP)
-                  <input type="number" id="prod-venta" step="0.01" placeholder="0.00">
-                </label>
-
-                <label>Foto Producto
-                  <input type="file" id="prod-img" accept="image/*">
-                </label>
-              </div>
-              <button style="width: 100%; margin-top: 20px;" onclick="guardarProducto()">✨ Guardar Producto</button>
-
-              <hr>
-              <h5>Productos en Sistema</h5>
-              <div class="prod-table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>PVP</th>
-                      <th>Familia</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody id="tabla-productos-body">
-                    </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-        </article>
-      </section>
 
       <section id="empresa" class="tab-section active">
         <article class="content-card">
@@ -215,13 +49,11 @@
       <section id="documentos" class="tab-section">
         <article class="content-card">
           <h3>Configuración de Impresión</h3>
-          <p>Elige qué datos se muestran en Tickets y Facturas.</p>
-          <div class="input-group" style="background: #f9fafb; padding: 20px; border-radius: 10px;">
+          <div class="input-group" style="background: var(--code-background-color); padding: 20px; border-radius: 10px;">
             <label><input type="checkbox" id="doc-logo"> Logo</label>
             <label><input type="checkbox" id="doc-direccion"> Dirección</label>
             <label><input type="checkbox" id="doc-telefono"> Teléfono</label>
             <label><input type="checkbox" id="doc-email"> Email</label>
-            <label><input type="checkbox" id="doc-web"> Web</label>
             <label><input type="checkbox" id="doc-pago"> Modo Pago</label>
           </div>
           <br>
@@ -229,31 +61,73 @@
         </article>
       </section>
 
+      <section id="catalogo" class="tab-section">
+        <article class="content-card">
+          <div class="grid">
+            <div>
+              <h4>📁 Familias</h4>
+              <input type="hidden" id="cat-id-edit">
+              <input id="cat-nombre" placeholder="Nombre">
+              <select id="cat-fiscal">
+                <option value="IVA">Solo IVA</option>
+                <option value="IVA_RE">IVA + RE</option>
+              </select>
+              <button class="outline" id="btn-cat-guardar" onclick="crearCategoria()">Guardar Familia</button>
+              <ul id="lista-categorias-config"></ul>
+            </div>
+            <div>
+              <h4>📦 Producto</h4>
+              <input id="prod-nombre" placeholder="Nombre">
+              <select id="prod-cat-select"></select>
+              <input type="number" id="prod-venta" placeholder="PVP (€)">
+              <input type="file" id="prod-img">
+              <button class="primary" onclick="guardarProducto()">Guardar Producto</button>
+              <table role="grid">
+                <thead><tr><th>Nombre</th><th>PVP</th><th>Acciones</th></tr></thead>
+                <tbody id="tabla-productos-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </section>
+
       <section id="temas" class="tab-section">
         <article class="content-card">
-          <h3>Personalización del Sistema</h3>
-          <label><input type="checkbox" id="nav-mostrar-logo"> Mostrar logo en la barra de navegación</label>
+          <h3>Personalización de Interfaz</h3>
           
-          <hr>
-          <h5>Perfil de Color</h5>
-          <div class="theme-preview">
-            <div class="theme-dot" style="background: #3b82f6;" onclick="setTheme('#3b82f6')"></div>
-            <div class="theme-dot" style="background: #10b981;" onclick="setTheme('#10b981')"></div>
-            <div class="theme-dot" style="background: #ef4444;" onclick="setTheme('#ef4444')"></div>
-            <div class="theme-dot" style="background: #8b5cf6;" onclick="setTheme('#8b5cf6')"></div>
-            <div class="theme-dot" style="background: #f59e0b;" onclick="setTheme('#f59e0b')"></div>
-          </div>
-          <br>
-          <label>O elige un color personalizado:
-            <input type="color" id="color" oninput="setTheme(this.value)">
-          </label>
+          <label>🎨 Temas Preestablecidos</label>
+          <select id="preset-themes" onchange="aplicarTemaPreestablecido(this.value)">
+            <option value="modern-blue">🔹 Azul Moderno</option>
+            <option value="dark-emerald">🌲 Esmeralda Nocturno</option>
+            <option value="royal-purple">👑 Púrpura Real</option>
+            <option value="minimal-gray">🌑 Gris Industrial</option>
+          </select>
 
           <hr>
-          <h5>Modo de Pantalla</h5>
-          <select id="tema" onchange="cambiarModo(this.value)">
-            <option value="claro">☀️ Modo Claro</option>
-            <option value="oscuro">🌙 Modo Noche</option>
+
+          <div class="grid">
+            <div>
+              <label>Color de Acento (Botones)</label>
+              <input type="color" id="color" oninput="previewColor('--primary', this.value)">
+            </div>
+            <div>
+              <label>Color de Cajas</label>
+              <input type="color" id="color-cajas" oninput="actualizarCajaYContraste(this.value)">
+            </div>
+            <div>
+              <label>Color de Texto</label>
+              <input type="color" id="color-texto" oninput="previewColor('--color', this.value)">
+            </div>
+          </div>
+
+          <hr>
+          
+          <label>Modo Base</label>
+          <select id="tema-select" onchange="document.documentElement.setAttribute('data-theme', this.value)">
+            <option value="light">☀️ Claro</option>
+            <option value="dark">🌙 Oscuro</option>
           </select>
+          <label><input type="checkbox" id="nav-mostrar-logo"> Mostrar logo en Navbar</label>
         </article>
       </section>
 
@@ -268,30 +142,10 @@
     document.getElementById(tabId).classList.add('active');
     btn.classList.add('active');
   }
-
-  function setTheme(color) {
-    document.documentElement.style.setProperty('--accent', color);
-    const colorInput = document.getElementById('color');
-    if(colorInput) colorInput.value = color;
-  }
-
-  function cambiarModo(modo) {
-    if(modo === 'oscuro') {
-      document.documentElement.style.setProperty('--bg-app', '#1a202c');
-      document.documentElement.style.setProperty('--bg-card', '#2d3748');
-      document.documentElement.style.setProperty('--text-main', '#f7fafc');
-      document.documentElement.style.setProperty('--border-color', '#4a5568');
-    } else {
-      document.documentElement.style.setProperty('--bg-app', '#f4f7f9');
-      document.documentElement.style.setProperty('--bg-card', '#ffffff');
-      document.documentElement.style.setProperty('--text-main', '#2d3748');
-      document.documentElement.style.setProperty('--border-color', '#e2e8f0');
-    }
-  }
+  window.switchTab = switchTab;
 </script>
-
 <script src="js/navbar.js" type="module"></script>
-<script type="module" src="js/config-panel-pro.js"></script>
+<script src="js/config-panel-pro.js" type="module"></script>
 
 </body>
 </html>

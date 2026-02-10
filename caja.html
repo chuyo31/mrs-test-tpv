@@ -1,162 +1,117 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
-  <!--estilos css-->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<link rel="stylesheet" href="css/style.css">
-
-<!-- fin de los estilos css-->
   <meta charset="UTF-8">
   <title>MRS TPV · Caja</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-  <style>
-    :root { --accent: #3b82f6; }
-    .btn-cantidad { padding: 2px 12px; margin: 0 5px; }
-    .acciones { display: flex; align-items: center; justify-content: center; }
-    #categorias, #productos { 
-        display: flex; 
-        flex-wrap: wrap; 
-        gap: 10px; 
-    }
-    #productos button {
-        min-width: 140px;
-        text-align: center;
-        line-height: 1.2;
-    }
-    .resumen-cobro {
-        background: #f8fafc;
-        padding: 1rem;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-    }
-    /* Mejora visual para Verifactu: destacar que el precio es editable */
-    .precio-editable {
-        cursor: pointer;
-        color: var(--accent);
-        text-decoration: underline dashed;
-    }
-    tr td { vertical-align: middle; }
-    .right { text-align: right; }
-    
-    /* Footer fijo para tener siempre el botón de cobro a la vista */
-    footer.cobro-footer {
-        position: sticky;
-        bottom: 0;
-        background: white;
-        border-top: 2px solid #e2e8f0;
-        padding: 1rem 0;
-        z-index: 100;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
   <div id="navbar-app"></div> 
-  <script src="js/navbar.js" type="module"></script>
 
-<section id="abrir-caja" class="container" style="display:none; margin-top:5rem;">
-  <article>
-    <header>
-      <h3 style="margin:0;">🚀 Apertura de Turno</h3>
-    </header>
-    <p>Para comenzar a vender, introduce el efectivo inicial disponible en el cajón.</p>
-    <label for="fondo-inicial">
-      Efectivo Inicial (€)
-      <input type="number" id="fondo-inicial" step="0.01" placeholder="0.00" autofocus>
-    </label>
-    <button onclick="abrirCaja()" class="primary">🟢 Confirmar y Abrir Caja</button>
-  </article>
-</section>
+  <section id="abrir-caja" class="container" style="display:none; margin-top:5rem;">
+    <article>
+      <header>
+        <h3 style="margin:0;">🚀 Apertura de Turno</h3>
+      </header>
+      <p>Introduce el efectivo inicial disponible en el cajón para comenzar.</p>
+      <label for="fondo-inicial">
+        Efectivo Inicial (€)
+        <input type="number" id="fondo-inicial" step="0.01" placeholder="0.00" autofocus>
+      </label>
+      <button onclick="abrirCaja()" class="primary">🟢 Confirmar y Abrir Caja</button>
+    </article>
+  </section>
 
-<div id="zona-caja" style="display:none; margin-top: 1rem;">
-  <main class="container-fluid" style="padding: 0 20px;">
-    <div class="grid">
-      
-      <section>
-        <article style="padding: 1rem; margin-bottom: 0;">
+  <div id="zona-caja" style="display:none; margin-top: 1rem;">
+    <main class="container-fluid" style="padding: 0 20px;">
+      <div class="grid">
+        
+        <section>
+          <article style="padding: 1rem; margin-bottom: 0;">
             <header style="padding: 0.5rem 1rem; margin-bottom: 1rem;">
-                <h4 style="margin:0;">🛒 Venta Actual</h4>
+              <h4 style="margin:0;">🛒 Venta Actual</h4>
             </header>
             
-            <div style="max-height: 350px; overflow-y: auto;">
-                <table id="tabla-venta">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th style="text-align:center">Cant.</th>
-                      <th>Precio</th>
-                      <th class="right">Total</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                      </tbody>
-                </table>
+            <div style="max-height: 400px; overflow-y: auto;">
+              <table id="tabla-venta">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="text-center">Cant.</th>
+                    <th>Precio</th>
+                    <th class="right">Total</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  </tbody>
+              </table>
             </div>
 
             <div class="resumen-cobro">
-                <div style="display:flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
-                    <span>Base Imponible:</span> <span id="subtotal">0.00 €</span>
-                </div>
-                <div style="display:flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
-                    <span>IVA (21%):</span> <span id="total-iva">0.00 €</span>
-                </div>
-                <div style="display:flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
-                    <span>Recargo RE:</span> <span id="total-recargo">0.00 €</span>
-                </div>
-                <hr>
-                <div style="display:flex; justify-content: space-between; font-size: 1.6rem;">
-                    <strong>TOTAL:</strong> <strong id="total-venta" style="color: var(--accent);">0.00 €</strong>
-                </div>
+              <div class="grid" style="font-size: 0.9rem; opacity: 0.8; margin-bottom:0;">
+                <div>Base: <span id="subtotal">0.00 €</span></div>
+                <div>IVA: <span id="total-iva">0.00 €</span></div>
+                <div>RE: <span id="total-recargo">0.00 €</span></div>
+              </div>
+              <hr>
+              <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin:0;">TOTAL</h2>
+                <h2 id="total-venta" style="margin:0; color: var(--primary);">0.00 €</h2>
+              </div>
             </div>
-        </article>
-      </section>
+          </article>
+        </section>
 
-      <section>
-        <h4>Familias</h4>
-        <div id="categorias"></div>
-        <hr>
-        <h4>Productos</h4>
-        <div id="productos"></div>
-      </section>
-      
-    </div>
-  </main>
+        <section>
+          <h5>Familias</h5>
+          <div id="categorias"></div>
+          <hr>
+          <h5>Productos</h5>
+          <div id="productos"></div>
+        </section>
+        
+      </div>
+    </main>
 
-  <footer class="cobro-footer">
-    <div class="container">
+    <footer class="cobro-footer">
+      <div class="container">
         <div class="grid" style="align-items: end;">
-            <div>
-                <h6>Forma de Pago</h6>
-                <div style="display:flex; gap:10px;">
-                    <button class="secondary btn-pago outline" onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
-                    <button class="secondary btn-pago outline" onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
-                </div>
-                <p style="margin:10px 0 0 0;">Seleccionado: <strong id="pago-seleccionado">—</strong></p>
+          
+          <div>
+            <h6>Forma de Pago</h6>
+            <div style="display:flex; gap:10px;">
+              <button class="secondary outline btn-pago" onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
+              <button class="secondary outline btn-pago" onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
             </div>
+            <p style="margin:10px 0 0 0;"><small>Seleccionado:</small> <strong id="pago-seleccionado">—</strong></p>
+          </div>
 
-            <div id="bloque-efectivo" style="display:none;">
-              <label style="margin-bottom:0;">Entregado (€)
-                <input type="number" id="efectivo-entregado" step="0.01" oninput="calcularCambio()" placeholder="0.00" style="margin-bottom:0.5rem;">
-              </label>
-              <p style="margin:0;">Cambio: <strong id="cambio" style="color: green; font-size: 1.2rem;">0.00 €</strong></p>
-            </div>
+          <div id="bloque-efectivo" style="display:none;">
+            <label style="margin-bottom:0;">Entregado (€)
+              <input type="number" id="efectivo-entregado" step="0.01" oninput="calcularCambio()" placeholder="0.00">
+            </label>
+            <p style="margin:0;">Cambio: <strong id="cambio" style="color: var(--primary); font-size: 1.2rem;">0.00 €</strong></p>
+          </div>
 
-            <div>
-                <button class="primary" onclick="guardarVenta()" style="width: 100%; height: 70px; font-size: 1.3rem; margin-bottom:0;">
-                    💾 COBRAR TICKET
-                </button>
-            </div>
+          <div>
+            <button class="primary" onclick="guardarVenta()" style="width: 100%; height: 80px; font-size: 1.4rem; margin-bottom:0;">
+              💾 COBRAR TICKET
+            </button>
+          </div>
+
         </div>
-    </div>
-  </footer>
-</div>
+      </div>
+    </footer>
+  </div>
 
-<script src="js/auth.js" type="module"></script>
-<script src="js/caja.js" type="module"></script>
+  <script src="js/navbar.js" type="module"></script>
+  <script src="js/auth.js" type="module"></script>
+  <script src="js/caja.js" type="module"></script>
 
 </body>
 </html>
