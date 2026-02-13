@@ -3,6 +3,7 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     collection,
     getDocs,
     addDoc,
@@ -80,11 +81,18 @@ async function cargarListasCatalogo() {
         productosLocal = [];
         if (tablaBody) {
             tablaBody.innerHTML = "";
+            let totalUnidades = 0;
+            let productosAPedir = 0;
             prodSnap.forEach((docSnap) => {
                 const p = { id: docSnap.id, ...docSnap.data() };
                 productosLocal.push(p);
                 const familia = categoriasLocal.find(c => c.id === p.categoria_id);
                 const nombreFamilia = familia ? familia.nombre : "General";
+                const stock = Number(p.stock || 0);
+                const min = Number(p.min_stock || 0);
+                const pedir = Math.max(0, min - stock);
+                totalUnidades += stock;
+                if (stock < min) productosAPedir++;
                 
                 const imgTag = p.imagen_url 
                     ? `<img src="${p.imagen_url}" class="product-img-small">`
@@ -99,12 +107,21 @@ async function cargarListasCatalogo() {
                     </td>
                     <td><span class="badge-fiscal">${nombreFamilia}</span></td>
                     <td style="text-align: right; font-weight: 800; font-family: monospace;">${p.pvp.toFixed(2)}€</td>
+                    <td style="text-align: right; font-family: monospace; ${stock < min ? 'color: var(--primary); font-weight: 700;' : ''}">${stock}</td>
+                    <td style="text-align: right; font-family: monospace;">${min}</td>
+                    <td style="text-align: right; font-family: monospace; ${pedir > 0 ? 'color: var(--primary); font-weight: 700;' : ''}">${pedir}</td>
                     <td>
                         <div class="actions-cell">
-                            <button class="btn-icon-modern" onclick="prepararEdicionProducto('${p.id}')">
+                            <button class="btn-icon-modern" title="Editar" onclick="prepararEdicionProducto('${p.id}')">
                                 <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                             </button>
-                            <button class="btn-icon-modern delete" onclick="eliminarProducto('${p.id}')">
+                            <button class="btn-icon-modern" title="Entrada" onclick="ajustarStockEntrada('${p.id}')">
+                                <i data-lucide="arrow-down-circle" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="btn-icon-modern" title="Salida" onclick="ajustarStockSalida('${p.id}')">
+                                <i data-lucide="arrow-up-circle" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="btn-icon-modern delete" title="Eliminar" onclick="eliminarProducto('${p.id}')">
                                 <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                             </button>
                         </div>
@@ -112,6 +129,12 @@ async function cargarListasCatalogo() {
                 `;
                 tablaBody.appendChild(tr);
             });
+            const totalProdEl = document.getElementById("inv-total-prod");
+            const totalUnidEl = document.getElementById("inv-total-unid");
+            const aPedirEl = document.getElementById("inv-a-pedir");
+            if (totalProdEl) totalProdEl.textContent = String(productosLocal.length);
+            if (totalUnidEl) totalUnidEl.textContent = String(totalUnidades);
+            if (aPedirEl) aPedirEl.textContent = String(productosAPedir);
         }
         if(window.lucide) window.lucide.createIcons();
     } catch (error) { console.error("Error catálogo:", error); }
@@ -195,6 +218,8 @@ window.prepararEdicionProducto = function(id) {
     document.getElementById("prod-nombre").value = p.nombre || "";
     document.getElementById("prod-venta").value = p.pvp || "";
     document.getElementById("prod-cat-select").value = p.categoria_id || "";
+    if (document.getElementById("prod-stock")) document.getElementById("prod-stock").value = Number(p.stock || 0);
+    if (document.getElementById("prod-min-stock")) document.getElementById("prod-min-stock").value = Number(p.min_stock || 0);
     document.getElementById("prod-nombre").focus();
 };
 
@@ -212,6 +237,8 @@ window.guardarProducto = async function() {
     const pvp = parseFloat(document.getElementById("prod-venta").value);
     const catId = document.getElementById("prod-cat-select").value;
     const fileInput = document.getElementById("prod-img");
+    const stockVal = parseInt(document.getElementById("prod-stock")?.value || "0", 10);
+    const minVal = parseInt(document.getElementById("prod-min-stock")?.value || "0", 10);
 
     if (!nombre || isNaN(pvp) || !catId) return alert("Faltan datos");
 
@@ -229,6 +256,8 @@ window.guardarProducto = async function() {
             nombre, pvp, categoria_id: catId,
             base_imponible: Number(base.toFixed(4)),
             cuota_iva: Number((base * 0.21).toFixed(4)),
+            stock: Number.isFinite(stockVal) ? Math.max(0, stockVal) : 0,
+            min_stock: Number.isFinite(minVal) ? Math.max(0, minVal) : 0,
             // Sin RE
             updated_at: new Date()
         };
@@ -244,8 +273,33 @@ window.guardarProducto = async function() {
         }
         document.getElementById("prod-nombre").value = "";
         document.getElementById("prod-venta").value = "";
+        if (document.getElementById("prod-stock")) document.getElementById("prod-stock").value = "";
+        if (document.getElementById("prod-min-stock")) document.getElementById("prod-min-stock").value = "";
         cargarListasCatalogo();
     } catch (e) { alert("Error al guardar producto"); }
+};
+
+// NUEVO: Ajustes de stock (Entrada/Salida)
+window.ajustarStockEntrada = async function(id) {
+    const qty = parseInt(prompt("Cantidad de entrada (unid):") || "0", 10);
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const ref = doc(db, "products", id);
+    const snap = await getDoc(ref);
+    const cur = Number(snap.data()?.stock || 0);
+    const next = cur + qty;
+    await setDoc(ref, { stock: next, updated_at: new Date() }, { merge: true });
+    cargarListasCatalogo();
+};
+
+window.ajustarStockSalida = async function(id) {
+    const qty = parseInt(prompt("Cantidad de salida (unid):") || "0", 10);
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const ref = doc(db, "products", id);
+    const snap = await getDoc(ref);
+    const cur = Number(snap.data()?.stock || 0);
+    const next = Math.max(0, cur - qty);
+    await setDoc(ref, { stock: next, updated_at: new Date() }, { merge: true });
+    cargarListasCatalogo();
 };
 
 /* ==========================================

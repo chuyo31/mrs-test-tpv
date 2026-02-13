@@ -308,6 +308,20 @@ async function guardarVenta() {
       efectivo_entregado: entregado
     });
 
+    // Ajustar stock de productos vendidos
+    for (const l of ventaActual) {
+      try {
+        const ref = doc(db, "products", l.id);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const cur = Number(snap.data().stock || 0);
+          const cant = Number(l.cantidad || 1);
+          const next = Math.max(0, cur - cant);
+          await updateDoc(ref, { stock: next, updated_at: new Date() });
+        }
+      } catch (e) { console.warn("No se pudo ajustar stock de", l.id); }
+    }
+
     alert("Venta guardada: " + num);
     ventaActual = [];
     metodoPago = null;
