@@ -6,128 +6,275 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Iconos Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
 <div id="navbar-app"></div>
 
 <main class="container">
-  <div class="main-grid">
+  <header class="config-header">
+    <h2>Panel de Configuración</h2>
+    <p style="opacity: 0.7;">Gestiona los datos de tu empresa, documentos y apariencia del sistema.</p>
+  </header>
+
+  <div class="config-grid">
     
-    <aside class="side-nav">
-      <h5 style="margin-left:15px; font-size: 0.8rem; opacity: 0.6;">AJUSTES</h5>
-      <button onclick="switchTab('empresa', this)" class="active">🏢 Empresa</button>
-      <button onclick="switchTab('documentos', this)">🧾 Documentos</button>
-      <button onclick="switchTab('catalogo', this)">📂 Catálogo</button>
-      <button onclick="switchTab('temas', this)">🎨 Interfaz</button>
-      <hr>
-      <button class="primary" onclick="guardarPanelPro()">💾 Guardar Cambios</button>
-      <button class="outline secondary" onclick="restablecerInterfaz()" style="font-size: 0.7rem; border-color: rgba(125,125,125,0.3)">🔄 Resetear Colores</button>
+    <aside class="side-nav-modern">
+      <button onclick="switchTab('empresa', this)" class="nav-item active">
+        <i data-lucide="building-2"></i> Empresa
+      </button>
+      <button onclick="switchTab('documentos', this)" class="nav-item">
+        <i data-lucide="file-text"></i> Documentos
+      </button>
+      <button onclick="switchTab('catalogo', this)" class="nav-item">
+        <i data-lucide="package"></i> Catálogo
+      </button>
+      <button onclick="switchTab('temas', this)" class="nav-item">
+        <i data-lucide="palette"></i> Interfaz
+      </button>
     </aside>
 
     <div class="content-wrapper">
 
+      <!-- SECCIÓN EMPRESA -->
       <section id="empresa" class="tab-section active">
-        <article class="content-card">
-          <h3>Datos de Empresa</h3>
-          <div class="input-group">
-            <input id="nombre" placeholder="Nombre comercial">
-            <input id="razon" placeholder="Razón social">
-            <input id="cif" placeholder="CIF/NIF">
-            <input id="telefono" placeholder="Teléfono">
-            <input id="email" placeholder="Email de contacto" class="span-2">
-            <input id="direccion" placeholder="Dirección completa" class="span-2">
+        <article class="config-card-modern">
+          <div class="section-title">
+            <i data-lucide="building-2" style="color: var(--primary);"></i>
+            <span>Datos Identificativos</span>
           </div>
-          <hr>
-          <label>Logotipo Corporativo
-            <input type="file" id="logo" accept="image/*">
-          </label>
-          <img id="logo-preview" style="display:none; max-width:180px; border-radius: 10px; margin-top:10px;">
+          
+          <div class="input-grid-modern">
+            <div class="input-field-modern">
+              <label>Nombre Comercial</label>
+              <input id="nombre" placeholder="Ej: Mi Negocio S.L.">
+            </div>
+            <div class="input-field-modern">
+              <label>Razón Social</label>
+              <input id="razon" placeholder="Nombre legal completo">
+            </div>
+            <div class="input-field-modern">
+              <label>CIF / NIF</label>
+              <input id="cif" placeholder="B12345678">
+            </div>
+            <div class="input-field-modern">
+              <label>Teléfono</label>
+              <input id="telefono" placeholder="600 000 000">
+            </div>
+            <div class="input-field-modern" style="grid-column: span 2;">
+              <label>Email de contacto</label>
+              <input id="email" placeholder="contacto@empresa.com">
+            </div>
+            <div class="input-field-modern" style="grid-column: span 2;">
+              <label>Dirección completa</label>
+              <input id="direccion" placeholder="Calle, Número, CP, Ciudad">
+            </div>
+          </div>
+
+          <hr style="margin: 2rem 0;">
+          
+          <div class="section-title">
+            <i data-lucide="image" style="color: var(--primary);"></i>
+            <span>Logotipo</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 30px;">
+            <div style="flex-grow: 1;">
+              <input type="file" id="logo" accept="image/*" style="margin-bottom: 0;">
+              <small style="opacity: 0.6;">Se recomienda formato PNG transparente.</small>
+            </div>
+            <div id="logo-preview-container" style="width: 120px; height: 120px; border: 2px dashed var(--muted-border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img id="logo-preview" style="display:none; max-width:100%; max-height:100%;">
+              <i data-lucide="image-plus" id="logo-placeholder" style="opacity: 0.3;"></i>
+            </div>
+          </div>
         </article>
       </section>
 
+      <!-- SECCIÓN DOCUMENTOS -->
       <section id="documentos" class="tab-section">
-        <article class="content-card">
-          <h3>Configuración de Impresión</h3>
-          <div class="input-group" style="background: var(--code-background-color); padding: 20px; border-radius: 10px;">
-            <label><input type="checkbox" id="doc-logo"> Logo</label>
-            <label><input type="checkbox" id="doc-direccion"> Dirección</label>
-            <label><input type="checkbox" id="doc-telefono"> Teléfono</label>
-            <label><input type="checkbox" id="doc-email"> Email</label>
-            <label><input type="checkbox" id="doc-pago"> Modo Pago</label>
+        <article class="config-card-modern">
+          <div class="section-title">
+            <i data-lucide="printer" style="color: var(--primary);"></i>
+            <span>Configuración de Documentos (Tickets/Facturas)</span>
           </div>
-          <br>
-          <textarea id="pie" rows="4" placeholder="Pie de página legal..."></textarea>
+          
+          <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 1.5rem;">Selecciona qué elementos quieres que se impriman en tus documentos:</p>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; background: var(--input-bg); padding: 25px; border-radius: 15px; border: 1px solid var(--muted-border-color);">
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-logo"> Logotipo</label>
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-direccion"> Dirección</label>
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-telefono"> Teléfono</label>
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-email"> Email</label>
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-razon"> Razón Social</label>
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-cif"> CIF/NIF</label>
+            <label style="margin:0; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="doc-pago"> Modo de Pago</label>
+          </div>
+          
+          <div class="input-field-modern" style="margin-top: 2rem;">
+            <label>Pie de página legal</label>
+            <textarea id="pie" rows="4" placeholder="Ej: Registro Mercantil de Madrid, Tomo..."></textarea>
+            <small style="opacity: 0.6;">Este texto aparecerá al final de todos tus tickets y facturas.</small>
+          </div>
+          
+          <div class="input-field-modern" style="margin-top: 1rem;">
+            <label>Pie de página legal (Facturas)</label>
+            <textarea id="pie-factura" rows="4" placeholder="Texto legal específico para facturas"></textarea>
+            <small style="opacity: 0.6;">Este texto se mostrará solo en facturas.</small>
+          </div>
         </article>
       </section>
 
+      <!-- SECCIÓN CATÁLOGO -->
       <section id="catalogo" class="tab-section">
-        <article class="content-card">
-          <div class="grid">
-            <div>
-              <h4>📁 Familias</h4>
-              <input type="hidden" id="cat-id-edit">
-              <input id="cat-nombre" placeholder="Nombre">
-              <select id="cat-fiscal">
-                <option value="IVA">Solo IVA</option>
-                <option value="IVA_RE">IVA + RE</option>
-              </select>
-              <button class="outline" id="btn-cat-guardar" onclick="crearCategoria()">Guardar Familia</button>
-              <ul id="lista-categorias-config"></ul>
-            </div>
-            <div>
-              <h4>📦 Producto</h4>
-              <input id="prod-nombre" placeholder="Nombre">
-              <select id="prod-cat-select"></select>
-              <input type="number" id="prod-venta" placeholder="PVP (€)">
-              <input type="file" id="prod-img">
-              <button class="primary" onclick="guardarProducto()">Guardar Producto</button>
-              <table role="grid">
-                <thead><tr><th>Nombre</th><th>PVP</th><th>Acciones</th></tr></thead>
-                <tbody id="tabla-productos-body"></tbody>
-              </table>
-            </div>
+        <div class="catalogo-layout-vertical">
+          
+          <!-- Bloque Superior: Familias -->
+          <div class="catalogo-section-full">
+            <article class="config-card-modern" style="padding: 1.5rem;">
+              <div class="section-title" style="margin-bottom: 1.5rem;">
+                <i data-lucide="layers" style="color: var(--primary);"></i>
+                <span>Gestión de Familias</span>
+              </div>
+              
+              <!-- Formulario de Familia (Horizontal) -->
+              <div style="display: grid; grid-template-columns: 2fr 1.5fr auto; gap: 15px; align-items: end; background: var(--input-background-color); padding: 20px; border-radius: 16px; border: 1px solid var(--muted-border-color); margin-bottom: 25px;">
+                <input type="hidden" id="cat-id-edit">
+                <div class="input-field-modern">
+                  <label>Nombre de la Familia</label>
+                  <input id="cat-nombre" placeholder="Ej: Bebidas, Comida...">
+                </div>
+                <div class="input-field-modern">
+                  <label>Imagen Familia</label>
+                  <input type="file" id="cat-img" style="padding: 8px; font-size: 0.75rem;">
+                </div>
+                <button class="btn-modern save" id="btn-cat-guardar" onclick="crearCategoria()" style="min-width: auto; height: 48px; padding: 0 25px;">
+                  <i data-lucide="plus-circle"></i> Guardar
+                </button>
+              </div>
+
+              <div style="max-height: 300px; overflow-y: auto;">
+                <ul id="lista-categorias-config" class="modern-list-grid">
+                  <!-- JS inyectará aquí los items con class="modern-list-item" -->
+                </ul>
+              </div>
+            </article>
           </div>
-        </article>
+
+          <!-- Bloque Inferior: Productos -->
+          <div class="catalogo-section-full">
+            <article class="config-card-modern" style="padding: 1.5rem;">
+              <div class="section-title" style="margin-bottom: 1.5rem;">
+                <i data-lucide="package" style="color: var(--primary);"></i>
+                <span>Gestión de Productos</span>
+              </div>
+
+              <!-- Formulario de Producto (Horizontal) -->
+              <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1.5fr auto; gap: 12px; align-items: end; background: var(--input-background-color); padding: 20px; border-radius: 16px; border: 1px solid var(--muted-border-color); margin-bottom: 25px;">
+                <div class="input-field-modern">
+                  <label>Nombre del Producto</label>
+                  <input id="prod-nombre" placeholder="Nombre...">
+                </div>
+                <div class="input-field-modern">
+                  <label>Familia</label>
+                  <select id="prod-cat-select" style="margin:0;"></select>
+                </div>
+                <div class="input-field-modern">
+                  <label>Precio (PVP)</label>
+                  <input type="number" id="prod-venta" placeholder="0.00€" step="0.01">
+                </div>
+                <div class="input-field-modern">
+                  <label>Imagen</label>
+                  <input type="file" id="prod-img" style="padding: 8px; font-size: 0.75rem;">
+                </div>
+                <button class="btn-modern save" onclick="guardarProducto()" style="min-width: auto; height: 48px; padding: 0 20px;">
+                  <i data-lucide="save"></i> Guardar
+                </button>
+              </div>
+
+              <div class="modern-table-wrapper">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 60px;">IMG</th>
+                      <th>Producto</th>
+                      <th>Familia</th>
+                      <th style="text-align: right;">PVP</th>
+                      <th style="text-align: right; width: 100px;">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-productos-body">
+                    <!-- JS inyectará filas aquí -->
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+
+        </div>
       </section>
 
+      <!-- SECCIÓN INTERFAZ -->
       <section id="temas" class="tab-section">
-        <article class="content-card">
-          <h3>Personalización de Interfaz</h3>
-          
-          <label>🎨 Temas Preestablecidos</label>
-          <select id="preset-themes" onchange="aplicarTemaPreestablecido(this.value)">
-            <option value="modern-blue">🔹 Azul Moderno</option>
-            <option value="dark-emerald">🌲 Esmeralda Nocturno</option>
-            <option value="royal-purple">👑 Púrpura Real</option>
-            <option value="minimal-gray">🌑 Gris Industrial</option>
-          </select>
+        <article class="config-card-modern">
+          <div class="section-title">
+            <i data-lucide="palette" style="color: var(--primary);"></i>
+            <span>Personalización de la Interfaz</span>
+          </div>
 
-          <hr>
-
-          <div class="grid">
-            <div>
-              <label>Color de Acento (Botones)</label>
-              <input type="color" id="color" oninput="previewColor('--primary', this.value)">
+          <label style="font-weight: 600; margin-bottom: 1rem; display: block;">Elige un Estilo Maestro</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 2rem;">
+            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('modern-blue')">
+              <div style="height: 40px; background: #3b82f6; border-radius: 6px; margin-bottom: 8px;"></div>
+              <span style="font-size: 0.8rem; font-weight: 600;">Azul Moderno</span>
             </div>
-            <div>
-              <label>Color de Cajas</label>
-              <input type="color" id="color-cajas" oninput="actualizarCajaYContraste(this.value)">
+            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('dark-emerald')">
+              <div style="height: 40px; background: #10b981; border-radius: 6px; margin-bottom: 8px;"></div>
+              <span style="font-size: 0.8rem; font-weight: 600;">Esmeralda Nocturno</span>
             </div>
-            <div>
-              <label>Color de Texto</label>
-              <input type="color" id="color-texto" oninput="previewColor('--color', this.value)">
+            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('royal-purple')">
+              <div style="height: 40px; background: #8b5cf6; border-radius: 6px; margin-bottom: 8px;"></div>
+              <span style="font-size: 0.8rem; font-weight: 600;">Púrpura Real</span>
+            </div>
+            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('oled-dark')">
+              <div style="height: 40px; background: #000000; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;"></div>
+              <span style="font-size: 0.8rem; font-weight: 600;">OLED Dark</span>
             </div>
           </div>
 
-          <hr>
-          
-          <label>Modo Base</label>
-          <select id="tema-select" onchange="document.documentElement.setAttribute('data-theme', this.value)">
-            <option value="light">☀️ Claro</option>
-            <option value="dark">🌙 Oscuro</option>
-          </select>
-          <label><input type="checkbox" id="nav-mostrar-logo"> Mostrar logo en Navbar</label>
+          <hr style="margin: 2rem 0;">
+
+          <div class="input-grid-modern">
+            <div class="input-field-modern">
+              <label>Color de Acento</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="color" id="color" oninput="previewColor('--primary', this.value)" style="width: 60px; height: 45px; padding: 2px;">
+                <input type="text" id="color-hex" readonly style="flex-grow: 1; font-family: monospace;">
+              </div>
+            </div>
+            <div class="input-field-modern">
+              <label>Color de Paneles</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="color" id="color-cajas" oninput="actualizarCajaYContraste(this.value)" style="width: 60px; height: 45px; padding: 2px;">
+                <input type="text" id="color-cajas-hex" readonly style="flex-grow: 1; font-family: monospace;">
+              </div>
+            </div>
+            <div class="input-field-modern">
+              <label>Modo de Base</label>
+              <select id="tema-select" onchange="document.documentElement.setAttribute('data-theme', this.value)" style="margin:0;">
+                <option value="light">☀️ Modo Claro</option>
+                <option value="dark">🌙 Modo Oscuro</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem; padding: 20px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--muted-border-color);">
+            <label style="margin: 0; display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="nav-mostrar-logo">
+              <span>Mostrar logotipo de empresa en la barra de navegación superior</span>
+            </label>
+          </div>
         </article>
       </section>
 
@@ -135,15 +282,32 @@
   </div>
 </main>
 
+  <!-- Barra de Acción Flotante -->
+  <div class="save-bar-modern">
+    <button class="btn-modern save" onclick="guardarPanelPro()">
+      <i data-lucide="save"></i> Guardar
+    </button>
+    <button class="btn-modern reset" onclick="restablecerInterfaz()">
+      <i data-lucide="refresh-cw"></i> Resetear
+    </button>
+  </div>
+
 <script>
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.side-nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     btn.classList.add('active');
+    lucide.createIcons(); // Refrescar iconos en la pestaña activa
   }
   window.switchTab = switchTab;
+  
+  // Inicializar iconos
+  document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+  });
 </script>
+
 <script src="js/navbar.js" type="module"></script>
 <script src="js/config-panel-pro.js" type="module"></script>
 

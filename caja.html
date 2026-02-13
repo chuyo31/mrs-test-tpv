@@ -7,6 +7,7 @@
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -28,16 +29,16 @@
 
   <div id="zona-caja" style="display:none; margin-top: 1rem;">
     <main class="container-fluid" style="padding: 0 20px;">
-      <div class="grid">
+      <div class="grid caja-grid">
         
         <section>
-          <article style="padding: 1rem; margin-bottom: 0;">
+          <article class="venta-card">
             <header style="padding: 0.5rem 1rem; margin-bottom: 1rem;">
               <h4 style="margin:0;">🛒 Venta Actual</h4>
             </header>
             
             <div style="max-height: 400px; overflow-y: auto;">
-              <table id="tabla-venta">
+              <table id="tabla-venta" class="modern-table">
                 <thead>
                   <tr>
                     <th>Producto</th>
@@ -53,26 +54,32 @@
             </div>
 
             <div class="resumen-cobro">
-              <div class="grid" style="font-size: 0.9rem; opacity: 0.8; margin-bottom:0;">
-                <div>Base: <span id="subtotal">0.00 €</span></div>
-                <div>IVA: <span id="total-iva">0.00 €</span></div>
-                <div>RE: <span id="total-recargo">0.00 €</span></div>
+              <div class="grid resumen-detalle">
+                <div>Base: <strong id="subtotal">0.00 €</strong></div>
+                <div>IVA (21%): <strong id="total-iva">0.00 €</strong></div>
               </div>
-              <hr>
-              <div style="display:flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin:0;">TOTAL</h2>
-                <h2 id="total-venta" style="margin:0; color: var(--primary);">0.00 €</h2>
+              <div class="total-line">
+                <span>TOTAL</span>
+                <strong id="total-venta">0.00 €</strong>
               </div>
             </div>
           </article>
         </section>
 
         <section>
-          <h5>Familias</h5>
-          <div id="categorias"></div>
-          <hr>
-          <h5>Productos</h5>
-          <div id="productos"></div>
+          <article class="panel-card">
+            <div class="section-title" style="margin-bottom: 0.5rem;">
+              <i data-lucide="layers" style="color: var(--primary);"></i>
+              <span>Familias</span>
+            </div>
+            <div id="categorias"></div>
+            <hr style="margin: 1rem 0;">
+            <div class="section-title" style="margin-bottom: 0.5rem;">
+              <i data-lucide="package" style="color: var(--primary);"></i>
+              <span>Productos</span>
+            </div>
+            <div id="productos"></div>
+          </article>
         </section>
         
       </div>
@@ -84,9 +91,9 @@
           
           <div>
             <h6>Forma de Pago</h6>
-            <div style="display:flex; gap:10px;">
-              <button class="secondary outline btn-pago" onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
-              <button class="secondary outline btn-pago" onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
+            <div class="pago-buttons">
+              <button class="btn-pago" onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
+              <button class="btn-pago" onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
             </div>
             <p style="margin:10px 0 0 0;"><small>Seleccionado:</small> <strong id="pago-seleccionado">—</strong></p>
           </div>
@@ -99,7 +106,7 @@
           </div>
 
           <div>
-            <button class="primary" onclick="guardarVenta()" style="width: 100%; height: 80px; font-size: 1.4rem; margin-bottom:0;">
+            <button class="btn-cobrar" onclick="guardarVenta()">
               💾 COBRAR TICKET
             </button>
           </div>

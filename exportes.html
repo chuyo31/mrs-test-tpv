@@ -44,8 +44,8 @@
       <ul class="resumen-fiscal-list">
         <li><span>Base IVA (21%):</span> <strong id="res-base-iva">0.00€</strong></li>
         <li><span>IVA Repercutido:</span> <strong id="res-iva">0.00€</strong></li>
-        <li><span>Base Recargo (RE):</span> <strong id="res-base-re">0.00€</strong></li>
-        <li><span>Recargo de Equivalencia:</span> <strong id="res-recargo">0.00€</strong></li>
+        <li><span>Reparación (Total ventas):</span> <strong id="res-reparacion">0.00€</strong></li>
+        <li><span>Complementos (Total ventas):</span> <strong id="res-complementos">0.00€</strong></li>
         <li class="fila-total-factura">
           <span>TOTAL VENTAS:</span> <strong id="res-total" style="color: var(--primary);">0.00€</strong>
         </li>
@@ -54,6 +54,7 @@
       <footer class="grid" style="margin-top: 2rem;">
         <button class="secondary outline" onclick="exportarCSV()">📄 Descargar CSV</button>
         <button class="secondary outline" onclick="exportarExcel()">📊 Descargar Excel</button>
+        <button class="secondary outline" id="btn-exportar-pdf" onclick="exportarPDF()">🖨️ Descargar PDF</button>
       </footer>
     </article>
   </main>

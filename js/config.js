@@ -20,9 +20,7 @@ window.crearCategoria = async function () {
 
   await addDoc(collection(db, "categories"), {
     nombre,
-    tipo_fiscal: tipo,
     iva: 21,
-    recargo: tipo === "IVA_RE" ? 5.2 : 0,
     activa: true,
     fecha_creacion: serverTimestamp()
   });
@@ -113,7 +111,6 @@ window.crearProducto = async function () {
     precio_coste: coste,
     precio_venta: venta,
     iva: 21,
-    recargo: tipo === "producto" ? 5.2 : 0,
     activo: true,
     fecha_creacion: serverTimestamp()
   });

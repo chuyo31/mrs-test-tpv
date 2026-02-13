@@ -45,12 +45,50 @@ async function cargarFactura() {
     const empresa = await cargarEmpresaDocs();
     document.getElementById("empresa-nombre").innerText = empresa.nombre || "MI EMPRESA";
     document.getElementById("empresa-datos").innerHTML = empresa.datosHtml || "";
-    document.getElementById("pie-legal").innerText = empresa.pie || "";
+    document.getElementById("pie-legal").innerText = empresa.pie_factura || "";
 
     const imgLogo = document.getElementById("empresa-logo");
-    if (empresa.logo && empresa.mostrarLogo) {
+    const mostrarLogo = !!(empresa.logo && empresa.mostrarLogo);
+    if (mostrarLogo) {
         imgLogo.src = empresa.logo;
         imgLogo.style.display = "block";
+    } else {
+        imgLogo.style.display = "none";
+    }
+    const nombreEl = document.getElementById("empresa-nombre");
+    if (nombreEl) nombreEl.style.display = mostrarLogo ? "none" : "inline";
+    
+    // Centrar y limitar el ancho del logo al ancho de la línea de dirección
+    if (mostrarLogo) {
+        const datosEl = document.getElementById("empresa-datos");
+        if (datosEl) {
+            let anchoRef = 0;
+            const direccionText = empresa.direccion || "";
+            if (direccionText) {
+                const measure = document.createElement("span");
+                const cs = getComputedStyle(datosEl);
+                measure.style.visibility = "hidden";
+                measure.style.whiteSpace = "pre";
+                measure.style.fontSize = cs.fontSize;
+                measure.style.fontFamily = cs.fontFamily;
+                measure.textContent = direccionText;
+                datosEl.parentNode.insertBefore(measure, datosEl);
+                anchoRef = measure.offsetWidth;
+                measure.remove();
+            } else {
+                anchoRef = datosEl.offsetWidth;
+            }
+            if (anchoRef > 0) {
+                imgLogo.style.maxWidth = anchoRef + "px";
+            }
+            imgLogo.style.height = "auto";
+            imgLogo.style.margin = "0 auto";
+            imgLogo.style.marginTop = "2mm";
+            // Reducir espacio vertical: ocultar BR tras el logo
+            const brTrasLogo = imgLogo.nextElementSibling;
+            if (brTrasLogo && brTrasLogo.tagName === "BR") brTrasLogo.style.display = "none";
+            imgLogo.style.marginBottom = "2px";
+        }
     }
 
     /* =========================
@@ -71,7 +109,6 @@ async function cargarFactura() {
 
     let acumuladoSubtotal = 0;
     let acumuladoIva = 0;
-    let acumuladoRecargo = 0;
 
     const lineas = f.lineas || [];
 
@@ -80,15 +117,12 @@ async function cargarFactura() {
         const pvpUnitario = l.precio ?? 0;
         const pvpTotalFila = pvpUnitario * cantidad;
 
-        // Cálculo de impuestos por línea (Regla de Oro Fiscal)
-        const divisor = (l.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
-        const baseFila = pvpTotalFila / divisor;
-        const ivaFila = baseFila * 0.21;
-        const reFila = (l.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
+        // Usamos el desglose guardado si existe, si no, recalculamos con IVA 21% (retrocompatibilidad)
+        const baseFila = (l.base_imponible ? l.base_imponible * cantidad : pvpTotalFila / 1.21);
+        const ivaFila = (l.cuota_iva ? l.cuota_iva * cantidad : baseFila * 0.21);
 
         acumuladoSubtotal += baseFila;
         acumuladoIva += ivaFila;
-        acumuladoRecargo += reFila;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -101,11 +135,11 @@ async function cargarFactura() {
     });
 
     // Totales finales
-    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva + acumuladoRecargo);
+    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva);
     
     document.getElementById("subtotal").innerText = acumuladoSubtotal.toFixed(2) + " €";
     document.getElementById("iva").innerText = acumuladoIva.toFixed(2) + " €";
-    document.getElementById("recargo").innerText = acumuladoRecargo.toFixed(2) + " €";
+    
     document.getElementById("total").innerText = totalFinal.toFixed(2) + " €";
 
     /* =========================

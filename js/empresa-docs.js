@@ -22,7 +22,9 @@ export async function cargarEmpresaDocs() {
   const datos = [];
 
   // Construcción de datos para documentos (facturas/tickets)
+  if (e.doc_razon && e.razon) datos.push(e.razon);
   if (e.doc_direccion && e.direccion) datos.push(e.direccion);
+  if (e.doc_cif && e.cif) datos.push("CIF/NIF: " + e.cif);
   if (e.doc_telefono && e.telefono) datos.push("Tel: " + e.telefono);
   if (e.doc_email && e.email) datos.push(e.email);
   if (e.doc_web && e.web) datos.push(e.web);
@@ -34,6 +36,7 @@ export async function cargarEmpresaDocs() {
     nombre: e.nombre || "MRS TPV",
     datosHtml: datos.join("<br>"),
     pie: e.pie || "",
+    pie_factura: e.pie_factura || "",
     // Mantenemos estas por compatibilidad con tus scripts de facturas:
     logo: e.logo_url || null,
     mostrarLogo: e.doc_logo === true

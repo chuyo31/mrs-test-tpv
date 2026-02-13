@@ -63,13 +63,23 @@ async function cargarCategoriasCaja() {
   snap.forEach(docSnap => {
     const cat = { id: docSnap.id, ...docSnap.data() };
     categoriasLocal.push(cat);
+    
     const btn = document.createElement("button");
-    btn.innerText = cat.nombre;
-    btn.className = "secondary";
-    btn.style = "margin: 5px; min-width: 120px;";
+    btn.className = "btn-categoria-modern";
+    
+    const imgHtml = cat.imagen_url 
+      ? `<img src="${cat.imagen_url}" class="img-caja">`
+      : `<div class="img-placeholder"><i data-lucide="layers"></i></div>`;
+      
+    btn.innerHTML = `
+      ${imgHtml}
+      <span>${cat.nombre}</span>
+    `;
+    
     btn.onclick = () => cargarProductosCaja(docSnap.id);
     divCat.appendChild(btn);
   });
+  if(window.lucide) window.lucide.createIcons();
 }
 
 async function cargarProductosCaja(catId) {
@@ -78,18 +88,32 @@ async function cargarProductosCaja(catId) {
   const snap = await getDocs(q);
   divProd.innerHTML = "";
   
-  if (snap.empty) divProd.innerHTML = "<small>No hay productos en esta familia</small>";
+  if (snap.empty) {
+    divProd.innerHTML = "<div style='padding:20px; opacity:0.6;'>No hay productos en esta familia</div>";
+    return;
+  }
 
   snap.forEach(docSnap => {
     const p = docSnap.data();
     const id = docSnap.id;
     const btn = document.createElement("button");
-    btn.className = "outline";
-    btn.style = "margin: 5px; height: auto; padding: 10px;";
-    btn.innerHTML = `${p.nombre}<br><strong>${parseFloat(p.pvp).toFixed(2)}€</strong>`;
+    btn.className = "btn-producto-modern";
+    
+    const imgHtml = p.imagen_url 
+      ? `<img src="${p.imagen_url}" class="img-caja">`
+      : `<div class="img-placeholder"><i data-lucide="package"></i></div>`;
+
+    btn.innerHTML = `
+      ${imgHtml}
+      <div class="info">
+        <span class="nombre">${p.nombre}</span>
+        <span class="precio">${parseFloat(p.pvp).toFixed(2)}€</span>
+      </div>
+    `;
     btn.onclick = () => agregarProductoVenta(id, p);
     divProd.appendChild(btn);
   });
+  if(window.lucide) window.lucide.createIcons();
 }
 
 function agregarProductoVenta(id, data) {
@@ -98,13 +122,24 @@ function agregarProductoVenta(id, data) {
     existe.cantidad++;
   } else {
     const cat = categoriasLocal.find(c => c.id === data.categoria_id);
+    const tipoFiscal = "IVA";
+    const pvp = parseFloat(data.pvp) || 0;
+    
+    // Cálculo IVA único (21%)
+    const divisor = 1.21;
+    const baseUnitativa = pvp / divisor;
+    const cuotaIVA = baseUnitativa * 0.21;
+
     ventaActual.push({
       id: id,
       nombre: data.nombre,
-      precio: parseFloat(data.pvp) || 0,
+      precio: pvp,
       cantidad: 1,
-      tipoFiscal: cat ? cat.tipoFiscal : "IVA",
-      categoria_id: data.categoria_id
+      tipoFiscal: tipoFiscal,
+      categoria_id: data.categoria_id,
+      base_imponible: Number(baseUnitativa.toFixed(4)),
+      cuota_iva: Number(cuotaIVA.toFixed(4)),
+      cuota_re: 0
     });
   }
   renderizarTabla();
@@ -115,7 +150,16 @@ window.editarPrecio = (id) => {
     if (!item) return;
     const nuevoPVP = prompt(`Editar precio final para: ${item.nombre}`, item.precio);
     if (nuevoPVP !== null && !isNaN(nuevoPVP) && nuevoPVP >= 0) {
-        item.precio = parseFloat(nuevoPVP);
+        const pvp = parseFloat(nuevoPVP);
+        item.precio = pvp;
+        
+    // Recalcular desglose (solo IVA 21%)
+    const divisor = 1.21;
+        const baseUnitativa = pvp / divisor;
+        item.base_imponible = Number(baseUnitativa.toFixed(4));
+        item.cuota_iva = Number((baseUnitativa * 0.21).toFixed(4));
+    item.cuota_re = 0;
+        
         renderizarTabla();
     }
 };
@@ -128,18 +172,15 @@ function renderizarTabla() {
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  let subtotalGeneral = 0, totalIva = 0, totalRec = 0;
+  let subtotalGeneral = 0, totalIva = 0;
 
   ventaActual.forEach(i => {
     const pvpTotalFila = i.precio * i.cantidad;
-    const divisor = (i.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
-    const baseFila = pvpTotalFila / divisor;
-    const ivaFila = baseFila * 0.21;
-    const reFila = (i.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
+    const baseFila = i.base_imponible * i.cantidad;
+    const ivaFila = i.cuota_iva * i.cantidad;
 
     subtotalGeneral += baseFila;
     totalIva += ivaFila;
-    totalRec += reFila;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -160,10 +201,9 @@ function renderizarTabla() {
     tbody.appendChild(tr);
   });
 
-  const totalFinal = subtotalGeneral + totalIva + totalRec;
+  const totalFinal = subtotalGeneral + totalIva;
   document.getElementById("subtotal").innerText = subtotalGeneral.toFixed(2) + " €";
   document.getElementById("total-iva").innerText = totalIva.toFixed(2) + " €";
-  document.getElementById("total-recargo").innerText = totalRec.toFixed(2) + " €";
   document.getElementById("total-venta").innerText = totalFinal.toFixed(2) + " €";
   
   if (metodoPago === 'efectivo') calcularCambio();
@@ -188,8 +228,8 @@ window.eliminarFila = (id) => {
 
 window.seleccionarPago = (tipo) => {
   metodoPago = tipo;
-  document.querySelectorAll('.btn-pago').forEach(b => b.classList.add('outline'));
-  event.currentTarget.classList.remove('outline');
+  document.querySelectorAll('.btn-pago').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
   document.getElementById("pago-seleccionado").innerText = tipo.toUpperCase();
   document.getElementById("bloque-efectivo").style.display = (tipo === 'efectivo') ? "block" : "none";
   renderizarTabla();
@@ -234,9 +274,8 @@ window.guardarVenta = async () => {
       numero_legal: num,
       fecha: serverTimestamp(),
       lineas: ventaActual,
-      subtotal: parseFloat(document.getElementById("subtotal").innerText),
-      total_iva: parseFloat(document.getElementById("total-iva").innerText),
-      total_recargo: parseFloat(document.getElementById("total-recargo").innerText),
+      subtotal: Number(parseFloat(document.getElementById("subtotal").innerText).toFixed(4)),
+      total_iva: Number(parseFloat(document.getElementById("total-iva").innerText).toFixed(4)),
       total: totalVenta,
       metodo_pago: metodoPago,
       caja_id: cajaActualId, // Vínculo para el Cierre Z

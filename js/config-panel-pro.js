@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+import { db, storage } from "./firebase.js";
 import {
     doc,
     getDoc,
@@ -10,13 +10,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
-    getStorage,
     ref,
     uploadBytes,
     getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-const storage = getStorage();
 
 /* ==========================================
    1. VARIABLES Y CARGA DE CATÁLOGO
@@ -51,14 +48,25 @@ async function cargarListasCatalogo() {
             const cat = { id: docSnap.id, ...docSnap.data() };
             categoriasLocal.push(cat);
 
+            const imgTag = cat.imagen_url 
+                ? `<img src="${cat.imagen_url}" class="product-img-small" style="margin-right:12px; width:40px; height:40px;">`
+                : `<div class="product-img-small" style="margin-right:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:var(--muted-border-color); opacity:0.3;"><i data-lucide="layers" style="width:18px;"></i></div>`;
+
             const li = document.createElement("li");
-            li.style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; background: var(--secondary-focus); padding: 8px; border-radius: 5px; cursor: pointer;";
+            li.className = "modern-list-item";
+            li.style.marginBottom = "0"; 
             li.innerHTML = `
-                <div onclick="prepararEdicionCategoria('${cat.id}')" style="flex-grow: 1;">
-                    <strong>${cat.nombre || 'Sin nombre'}</strong> <br>
-                    <small style="opacity: 0.7;">${cat.tipoFiscal || 'IVA'}</small>
+                <div onclick="prepararEdicionCategoria('${cat.id}')" style="display:flex; align-items:center; flex-grow: 1; cursor: pointer;">
+                    ${imgTag}
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.95rem;">${cat.nombre || 'Sin nombre'}</div>
+                    </div>
                 </div>
-                <button class="outline error" onclick="eliminarCategoria('${cat.id}')" style="padding: 2px 8px; margin: 0; width: auto;">X</button>
+                <div class="actions-cell">
+                    <button class="btn-icon-modern delete" onclick="eliminarCategoria('${cat.id}')">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
             `;
             listaCatUI.appendChild(li);
 
@@ -77,16 +85,35 @@ async function cargarListasCatalogo() {
                 productosLocal.push(p);
                 const familia = categoriasLocal.find(c => c.id === p.categoria_id);
                 const nombreFamilia = familia ? familia.nombre : "General";
+                
+                const imgTag = p.imagen_url 
+                    ? `<img src="${p.imagen_url}" class="product-img-small">`
+                    : `<div class="product-img-small" style="display:flex; align-items:center; justify-content:center; background:var(--muted-border-color); opacity:0.3;"><i data-lucide="package" style="width:20px;"></i></div>`;
+
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td onclick="prepararEdicionProducto('${p.id}')"><strong>${p.nombre || 'S/N'}</strong></td>
-                    <td onclick="prepararEdicionProducto('${p.id}')">${p.pvp || 0}€</td>
-                    <td onclick="prepararEdicionProducto('${p.id}')"><small>${nombreFamilia}</small></td>
-                    <td><button class="outline error" onclick="eliminarProducto('${p.id}')" style="padding: 4px; margin:0; width:auto;">🗑️</button></td>
+                    <td>${imgTag}</td>
+                    <td>
+                        <div style="font-weight: 700;">${p.nombre || 'S/N'}</div>
+                        <small style="opacity:0.6;">ID: ${p.id.substring(0,6)}</small>
+                    </td>
+                    <td><span class="badge-fiscal">${nombreFamilia}</span></td>
+                    <td style="text-align: right; font-weight: 800; font-family: monospace;">${p.pvp.toFixed(2)}€</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-icon-modern" onclick="prepararEdicionProducto('${p.id}')">
+                                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="btn-icon-modern delete" onclick="eliminarProducto('${p.id}')">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </td>
                 `;
                 tablaBody.appendChild(tr);
             });
         }
+        if(window.lucide) window.lucide.createIcons();
     } catch (error) { console.error("Error catálogo:", error); }
 }
 
@@ -104,22 +131,47 @@ window.prepararEdicionCategoria = function(id) {
     if (!cat) return;
     document.getElementById("cat-id-edit").value = cat.id;
     document.getElementById("cat-nombre").value = cat.nombre;
-    document.getElementById("cat-fiscal").value = cat.tipoFiscal;
     document.getElementById("btn-cat-guardar").innerText = "💾 Actualizar Familia";
 };
 
 window.crearCategoria = async function() {
     const id = document.getElementById("cat-id-edit").value;
     const nombre = document.getElementById("cat-nombre").value.trim();
-    const tipoFiscal = document.getElementById("cat-fiscal").value;
+    const fileInput = document.getElementById("cat-img");
+
     if (!nombre) return alert("Nombre obligatorio");
+
     try {
-        const data = { nombre, tipoFiscal };
-        if (id) { await setDoc(doc(db, "categories", id), data, { merge: true }); }
-        else { await addDoc(collection(db, "categories"), data); }
+        let imgUrl = null;
+        if (fileInput && fileInput.files.length > 0) {
+            const storageRef = ref(storage, `categories/${Date.now()}_${fileInput.files[0].name}`);
+            await uploadBytes(storageRef, fileInput.files[0]);
+            imgUrl = await getDownloadURL(storageRef);
+        }
+
+        const data = { nombre };
+        if (imgUrl) data.imagen_url = imgUrl;
+
+        if (id) {
+            await setDoc(doc(db, "categories", id), data, { merge: true });
+        } else {
+            await addDoc(collection(db, "categories"), data);
+        }
+
         window.limpiarFormCat();
+        if (fileInput) fileInput.value = "";
+
+        const btn = document.getElementById("btn-cat-guardar");
+        if (btn) {
+            btn.innerHTML = `<i data-lucide="plus-circle"></i> Guardar Familia`;
+            if(window.lucide) window.lucide.createIcons();
+        }
+
         cargarListasCatalogo();
-    } catch (e) { alert("Error al guardar categoría"); }
+    } catch (e) {
+        console.error("Error al guardar familia:", e);
+        alert("Error al guardar familia");
+    }
 };
 
 window.eliminarCategoria = async function(id) {
@@ -137,7 +189,9 @@ window.prepararEdicionProducto = function(id) {
     if (!p) return;
     const btn = document.querySelector("button[onclick='guardarProducto()']");
     btn.dataset.editId = p.id;
-    btn.innerText = "💾 Actualizar Producto";
+    btn.innerHTML = `<i data-lucide="refresh-cw"></i>`;
+    if(window.lucide) window.lucide.createIcons();
+    
     document.getElementById("prod-nombre").value = p.nombre || "";
     document.getElementById("prod-venta").value = p.pvp || "";
     document.getElementById("prod-cat-select").value = p.categoria_id || "";
@@ -161,9 +215,7 @@ window.guardarProducto = async function() {
 
     if (!nombre || isNaN(pvp) || !catId) return alert("Faltan datos");
 
-    const familia = categoriasLocal.find(c => c.id === catId);
-    const tieneRE = familia?.tipoFiscal === "IVA_RE";
-    const divisor = tieneRE ? 1.262 : 1.21;
+    const divisor = 1.21;
     const base = pvp / divisor;
 
     try {
@@ -177,14 +229,15 @@ window.guardarProducto = async function() {
             nombre, pvp, categoria_id: catId,
             base_imponible: Number(base.toFixed(4)),
             cuota_iva: Number((base * 0.21).toFixed(4)),
-            cuota_re: tieneRE ? Number((base * 0.052).toFixed(4)) : 0,
+            // Sin RE
             updated_at: new Date()
         };
         if (imgUrl) data.imagen_url = imgUrl;
         if (editId) {
             await setDoc(doc(db, "products", editId), data, { merge: true });
             delete btn.dataset.editId;
-            btn.innerText = "✨ Guardar Producto";
+            btn.innerHTML = `<i data-lucide="save"></i>`;
+            if(window.lucide) window.lucide.createIcons();
         } else {
             data.fecha = new Date();
             await addDoc(collection(db, "products"), data);
@@ -202,29 +255,97 @@ window.guardarProducto = async function() {
 // NUEVO: Función para previsualizar colores en vivo
 window.previewColor = function(variable, color) {
     document.documentElement.style.setProperty(variable, color);
+    
+    // Actualizar el texto del input hexadecimal
+    if (variable === '--primary' && document.getElementById("color-hex")) {
+        document.getElementById("color-hex").value = color.toUpperCase();
+    }
+    if (variable === '--color' && document.getElementById("color-texto-hex")) {
+        document.getElementById("color-texto-hex").value = color.toUpperCase();
+    }
+    
+    // Si cambiamos el primary, recalculamos su inverso
+    if (variable === '--primary') {
+        const r = parseInt(color.substr(1, 2), 16);
+        const g = parseInt(color.substr(3, 2), 16);
+        const b = parseInt(color.substr(5, 2), 16);
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        document.documentElement.style.setProperty('--primary-inverse', (yiq >= 128) ? '#11191f' : '#ffffff');
+    }
 };
 
-// NUEVO: Lógica de Temas Preestablecidos
-window.aplicarTemaPreestablecido = function(temaId) {
-    const config = TEMAS_MAESTROS[temaId];
-    if (!config) return;
+// NUEVO: Temas preestablecidos actualizados
+window.aplicarTemaPreestablecido = function(tema) {
+    const themes = {
+        "modern-blue": { 
+            primary: "#3b82f6", 
+            card: "#ffffff", 
+            text: "#11191f", 
+            theme: "light",
+            bg: "#f4f7f9"
+        },
+        "dark-emerald": { 
+            primary: "#10b981", 
+            card: "#1a2e28", 
+            text: "#ffffff", 
+            theme: "dark",
+            bg: "#060f0c"
+        },
+        "royal-purple": { 
+            primary: "#8b5cf6", 
+            card: "#211b2e", 
+            text: "#ffffff", 
+            theme: "dark",
+            bg: "#0f0c14"
+        },
+        "minimal-gray": { 
+            primary: "#6366f1", 
+            card: "#ffffff", 
+            text: "#11191f", 
+            theme: "light",
+            bg: "#f4f7f9"
+        },
+        "oled-dark": { 
+            primary: "#ffffff", 
+            card: "#000000", 
+            text: "#ffffff", 
+            theme: "dark",
+            bg: "#000000"
+        }
+    };
+    const t = themes[tema];
+    if (t) {
+        document.documentElement.setAttribute('data-theme', t.theme);
+        document.documentElement.style.setProperty('--primary', t.primary);
+        document.documentElement.style.setProperty('--card-background-color', t.card);
+        document.documentElement.style.setProperty('--color', t.text);
+        if(t.bg) document.documentElement.style.setProperty('--background-color', t.bg);
+        
+        // Recalcular inversos
+        const r = parseInt(t.primary.substr(1, 2), 16);
+        const g = parseInt(t.primary.substr(3, 2), 16);
+        const b = parseInt(t.primary.substr(5, 2), 16);
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        document.documentElement.style.setProperty('--primary-inverse', (yiq >= 128) ? '#11191f' : '#ffffff');
 
-    // Aplicar a nivel DOM
-    document.documentElement.setAttribute('data-theme', config.mode);
-    document.documentElement.style.setProperty('--primary', config.primary);
-    document.documentElement.style.setProperty('--card-background-color', config.card);
-    document.documentElement.style.setProperty('--color', config.text);
-
-    // Sincronizar los inputs del panel
-    if(document.getElementById("color")) document.getElementById("color").value = config.primary;
-    if(document.getElementById("color-cajas")) document.getElementById("color-cajas").value = config.card;
-    if(document.getElementById("color-texto")) document.getElementById("color-texto").value = config.text;
-    if(document.getElementById("tema-select")) document.getElementById("tema-select").value = config.mode;
+        // Actualizar inputs del panel
+        if(document.getElementById("color")) document.getElementById("color").value = t.primary;
+        if(document.getElementById("color-hex")) document.getElementById("color-hex").value = t.primary.toUpperCase();
+        if(document.getElementById("color-cajas")) document.getElementById("color-cajas").value = t.card;
+        if(document.getElementById("color-cajas-hex")) document.getElementById("color-cajas-hex").value = t.card.toUpperCase();
+        if(document.getElementById("tema-select")) document.getElementById("tema-select").value = t.theme;
+        
+        // Efecto visual en las cards de previsualización
+        document.querySelectorAll('.theme-preview-card').forEach(c => c.classList.remove('active'));
+    }
 };
 
 // NUEVO: Cálculo de contraste automático
 window.actualizarCajaYContraste = function(colorHex) {
     document.documentElement.style.setProperty('--card-background-color', colorHex);
+    if (document.getElementById("color-cajas-hex")) {
+        document.getElementById("color-cajas-hex").value = colorHex.toUpperCase();
+    }
     
     // Fórmula de luminancia YIQ para decidir color de texto
     const r = parseInt(colorHex.substr(1, 2), 16);
@@ -232,8 +353,18 @@ window.actualizarCajaYContraste = function(colorHex) {
     const b = parseInt(colorHex.substr(5, 2), 16);
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     
+    // Si el fondo es oscuro (yiq < 128), el texto debe ser claro (#ffffff)
+    // Si el fondo es claro (yiq >= 128), el texto debe ser oscuro (#11191f)
     const colorSugerido = (yiq >= 128) ? '#11191f' : '#ffffff';
     document.documentElement.style.setProperty('--color', colorSugerido);
+    
+    // También ajustamos el color inverso del primary para botones
+    const primaryColor = document.getElementById("color")?.value || "#3b82f6";
+    const pr = parseInt(primaryColor.substr(1, 2), 16);
+    const pg = parseInt(primaryColor.substr(3, 2), 16);
+    const pb = parseInt(primaryColor.substr(5, 2), 16);
+    const pyiq = ((pr * 299) + (pg * 587) + (b * 114)) / 1000;
+    document.documentElement.style.setProperty('--primary-inverse', (pyiq >= 128) ? '#11191f' : '#ffffff');
     
     if(document.getElementById("color-texto")) {
         document.getElementById("color-texto").value = colorSugerido;
@@ -259,12 +390,15 @@ async function cargarPanelPro() {
         // Empresa e Impresión
         const campos = ["nombre", "razon", "cif", "direccion", "telefono", "email", "pie"];
         campos.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = d[id] || ""; });
+        if (document.getElementById("pie-factura")) document.getElementById("pie-factura").value = d.pie_factura || "";
 
         const checks = {
             "doc-logo": "doc_logo",
             "doc-direccion": "doc_direccion",
             "doc-telefono": "doc_telefono",
             "doc-email": "doc_email",
+            "doc-razon": "doc_razon",
+            "doc-cif": "doc_cif",
             "doc-pago": "doc_pago",
             "nav-mostrar-logo": "nav_mostrar_logo"
         };
@@ -273,20 +407,26 @@ async function cargarPanelPro() {
         // TEMA E INTERFAZ (ACTUALIZADO)
         if(document.getElementById("tema-select")) document.getElementById("tema-select").value = d.tema || "light";
         if(document.getElementById("color")) document.getElementById("color").value = d.color_corporativo || "#3b82f6";
+        if(document.getElementById("color-hex")) document.getElementById("color-hex").value = (d.color_corporativo || "#3B82F6").toUpperCase();
         if(document.getElementById("color-cajas")) document.getElementById("color-cajas").value = d.color_cajas || "#ffffff";
-        if(document.getElementById("color-texto")) document.getElementById("color-texto").value = d.color_texto || "#11191f";
+        if(document.getElementById("color-cajas-hex")) document.getElementById("color-cajas-hex").value = (d.color_cajas || "#FFFFFF").toUpperCase();
+        if(document.getElementById("color-texto")) {
+            // No hay input color-texto en el nuevo HTML pero lo mantenemos por si acaso
+        }
 
         // Aplicar visualmente al cargar (Regla de Oro)
         document.documentElement.setAttribute('data-theme', d.tema || "light");
         document.documentElement.style.setProperty('--primary', d.color_corporativo || "#3b82f6");
         document.documentElement.style.setProperty('--card-background-color', d.color_cajas || "#ffffff");
         document.documentElement.style.setProperty('--color', d.color_texto || "#11191f");
+        if(d.color_fondo) document.documentElement.style.setProperty('--background-color', d.color_fondo);
 
         // Guardar en LocalStorage para otras páginas
         localStorage.setItem('theme', d.tema || "light");
         localStorage.setItem('accent-color', d.color_corporativo || "#3b82f6");
         localStorage.setItem('card-color', d.color_cajas || "#ffffff");
         localStorage.setItem('text-color', d.color_texto || "#11191f");
+        if(d.color_fondo) localStorage.setItem('bg-color', d.color_fondo);
 
         if (d.logo_url) {
             const img = document.getElementById("logo-preview");
@@ -317,17 +457,20 @@ window.guardarPanelPro = async function () {
             telefono: document.getElementById("telefono")?.value || "",
             email: document.getElementById("email")?.value || "",
             pie: document.getElementById("pie")?.value || "",
+            pie_factura: document.getElementById("pie-factura")?.value || "",
             doc_logo: document.getElementById("doc-logo")?.checked ?? true,
             doc_direccion: document.getElementById("doc-direccion")?.checked ?? true,
             doc_telefono: document.getElementById("doc-telefono")?.checked ?? true,
             doc_email: document.getElementById("doc-email")?.checked ?? false,
+            doc_razon: document.getElementById("doc-razon")?.checked ?? true,
+            doc_cif: document.getElementById("doc-cif")?.checked ?? true,
             doc_pago: document.getElementById("doc-pago")?.checked ?? true,
             nav_mostrar_logo: document.getElementById("nav-mostrar-logo")?.checked ?? false,
             tema: document.getElementById("tema-select")?.value || "light",
             color_corporativo: document.getElementById("color")?.value || "#3b82f6",
-            // NUEVO: Guardar colores de interfaz
             color_cajas: document.getElementById("color-cajas")?.value || "#ffffff",
-            color_texto: document.getElementById("color-texto")?.value || "#11191f",
+            color_texto: getComputedStyle(document.documentElement).getPropertyValue('--color').trim(),
+            color_fondo: getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim(),
             updated_at: new Date()
         };
 
@@ -340,6 +483,7 @@ window.guardarPanelPro = async function () {
         localStorage.setItem('accent-color', data.color_corporativo);
         localStorage.setItem('card-color', data.color_cajas);
         localStorage.setItem('text-color', data.color_texto);
+        localStorage.setItem('bg-color', data.color_fondo);
 
         alert("✅ Configuración guardada correctamente.");
         location.reload();

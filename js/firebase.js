@@ -7,6 +7,9 @@ import { getFirestore } from
 import { getAuth } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+import { getStorage } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyBqnNgjPsEhxCX2kxvW4OUjLme0IqG8pTQ",
   authDomain: "mrs-test-tpv.firebaseapp.com",
@@ -23,3 +26,4 @@ const app = getApps().length === 0
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
