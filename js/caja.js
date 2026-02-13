@@ -10,9 +10,6 @@ let metodoPago = null;
 let cajaActualId = null;
 let categoriasLocal = [];
 
-/* =========================
-   ESTADO DE CAJA
-========================= */
 async function comprobarCajaAbierta() {
   const q = query(collection(db, "cash_registers"), where("estado", "==", "abierta"), limit(1));
   try {
@@ -33,7 +30,7 @@ async function comprobarCajaAbierta() {
   } catch (e) { console.error("Error al comprobar caja:", e); }
 }
 
-window.abrirCaja = async () => {
+async function abrirCaja() {
   const fondoInput = document.getElementById("fondo-inicial");
   const fondo = parseFloat(fondoInput.value);
   if (isNaN(fondo) || fondo < 0) return alert("Por favor, introduce un fondo inicial válido.");
@@ -43,16 +40,12 @@ window.abrirCaja = async () => {
       fecha_apertura: serverTimestamp(),
       fondo_inicial: fondo,
       estado: "abierta",
-      // Aquí podrías añadir el email del usuario si usas Auth
     });
     fondoInput.value = "";
     comprobarCajaAbierta();
   } catch (e) { alert("Error al abrir caja"); }
-};
+}
 
-/* =========================
-   GESTIÓN DE PRODUCTOS
-========================= */
 async function cargarCategoriasCaja() {
   const divCat = document.getElementById("categorias");
   if (!divCat) return;
@@ -110,7 +103,7 @@ async function cargarProductosCaja(catId) {
         <span class="precio">${parseFloat(p.pvp).toFixed(2)}€</span>
       </div>
     `;
-    btn.onclick = () => agregarProductoVenta(id, p);
+    btn.addEventListener("click", () => agregarProductoVenta(id, p));
     divProd.appendChild(btn);
   });
   if(window.lucide) window.lucide.createIcons();
@@ -125,7 +118,6 @@ function agregarProductoVenta(id, data) {
     const tipoFiscal = "IVA";
     const pvp = parseFloat(data.pvp) || 0;
     
-    // Cálculo IVA único (21%)
     const divisor = 1.21;
     const baseUnitativa = pvp / divisor;
     const cuotaIVA = baseUnitativa * 0.21;
@@ -145,28 +137,22 @@ function agregarProductoVenta(id, data) {
   renderizarTabla();
 }
 
-window.editarPrecio = (id) => {
-    const item = ventaActual.find(i => i.id === id);
-    if (!item) return;
-    const nuevoPVP = prompt(`Editar precio final para: ${item.nombre}`, item.precio);
-    if (nuevoPVP !== null && !isNaN(nuevoPVP) && nuevoPVP >= 0) {
-        const pvp = parseFloat(nuevoPVP);
-        item.precio = pvp;
-        
-    // Recalcular desglose (solo IVA 21%)
+function editarPrecio(id) {
+  const item = ventaActual.find(i => i.id === id);
+  if (!item) return;
+  const nuevoPVP = prompt(`Editar precio final para: ${item.nombre}`, item.precio);
+  if (nuevoPVP !== null && !isNaN(nuevoPVP) && nuevoPVP >= 0) {
+    const pvp = parseFloat(nuevoPVP);
+    item.precio = pvp;
     const divisor = 1.21;
-        const baseUnitativa = pvp / divisor;
-        item.base_imponible = Number(baseUnitativa.toFixed(4));
-        item.cuota_iva = Number((baseUnitativa * 0.21).toFixed(4));
+    const baseUnitativa = pvp / divisor;
+    item.base_imponible = Number(baseUnitativa.toFixed(4));
+    item.cuota_iva = Number((baseUnitativa * 0.21).toFixed(4));
     item.cuota_re = 0;
-        
-        renderizarTabla();
-    }
-};
+    renderizarTabla();
+  }
+}
 
-/* =========================
-   RENDER Y CÁLCULOS
-========================= */
 function renderizarTabla() {
   const tbody = document.querySelector("#tabla-venta tbody");
   if (!tbody) return;
@@ -183,21 +169,52 @@ function renderizarTabla() {
     totalIva += ivaFila;
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i.nombre}</td>
-      <td>
-        <div class="acciones" style="display:flex; align-items:center; gap:8px;">
-          <button class="outline" onclick="cambiarCantidad('${i.id}', -1)" style="padding:2px 10px;">−</button>
-          <strong>${i.cantidad}</strong>
-          <button class="outline" onclick="cambiarCantidad('${i.id}', 1)" style="padding:2px 10px;">+</button>
-        </div>
-      </td>
-      <td onclick="editarPrecio('${i.id}')" style="cursor:pointer; color: var(--primary); text-decoration: underline;">
-        ${i.precio.toFixed(2)}€
-      </td>
-      <td class="right">${pvpTotalFila.toFixed(2)}€</td>
-      <td><button class="secondary" onclick="eliminarFila('${i.id}')" style="padding:4px; margin:0;">🗑️</button></td>
-    `;
+    const tdNombre = document.createElement("td");
+    tdNombre.textContent = i.nombre;
+    const tdCant = document.createElement("td");
+    const acciones = document.createElement("div");
+    acciones.className = "acciones";
+    acciones.style.display = "flex";
+    acciones.style.alignItems = "center";
+    acciones.style.gap = "8px";
+    const btnMenos = document.createElement("button");
+    btnMenos.className = "outline";
+    btnMenos.style.padding = "2px 10px";
+    btnMenos.textContent = "−";
+    btnMenos.addEventListener("click", () => cambiarCantidad(i.id, -1));
+    const strongCant = document.createElement("strong");
+    strongCant.textContent = String(i.cantidad);
+    const btnMas = document.createElement("button");
+    btnMas.className = "outline";
+    btnMas.style.padding = "2px 10px";
+    btnMas.textContent = "+";
+    btnMas.addEventListener("click", () => cambiarCantidad(i.id, 1));
+    acciones.appendChild(btnMenos);
+    acciones.appendChild(strongCant);
+    acciones.appendChild(btnMas);
+    tdCant.appendChild(acciones);
+    const tdPrecio = document.createElement("td");
+    tdPrecio.style.cursor = "pointer";
+    tdPrecio.style.color = "var(--primary)";
+    tdPrecio.style.textDecoration = "underline";
+    tdPrecio.textContent = `${i.precio.toFixed(2)}€`;
+    tdPrecio.addEventListener("click", () => editarPrecio(i.id));
+    const tdTotal = document.createElement("td");
+    tdTotal.className = "right";
+    tdTotal.textContent = `${pvpTotalFila.toFixed(2)}€`;
+    const tdEliminar = document.createElement("td");
+    const btnEliminar = document.createElement("button");
+    btnEliminar.className = "secondary";
+    btnEliminar.style.padding = "4px";
+    btnEliminar.style.margin = "0";
+    btnEliminar.textContent = "🗑️";
+    btnEliminar.addEventListener("click", () => eliminarFila(i.id));
+    tdEliminar.appendChild(btnEliminar);
+    tr.appendChild(tdNombre);
+    tr.appendChild(tdCant);
+    tr.appendChild(tdPrecio);
+    tr.appendChild(tdTotal);
+    tr.appendChild(tdEliminar);
     tbody.appendChild(tr);
   });
 
@@ -209,44 +226,37 @@ function renderizarTabla() {
   if (metodoPago === 'efectivo') calcularCambio();
 }
 
-/* =========================
-   ACCIONES DE COBRO
-========================= */
-window.cambiarCantidad = (id, delta) => {
+function cambiarCantidad(id, delta) {
   const item = ventaActual.find(i => i.id === id);
   if (item) {
     item.cantidad += delta;
     if (item.cantidad <= 0) ventaActual = ventaActual.filter(i => i.id !== id);
     renderizarTabla();
   }
-};
+}
 
-window.eliminarFila = (id) => {
+function eliminarFila(id) {
   ventaActual = ventaActual.filter(i => i.id !== id);
   renderizarTabla();
-};
+}
 
-window.seleccionarPago = (tipo) => {
+function seleccionarPago(tipo, target) {
   metodoPago = tipo;
   document.querySelectorAll('.btn-pago').forEach(b => b.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  if (target) target.classList.add('active');
   document.getElementById("pago-seleccionado").innerText = tipo.toUpperCase();
   document.getElementById("bloque-efectivo").style.display = (tipo === 'efectivo') ? "block" : "none";
   renderizarTabla();
-};
+}
 
-window.calcularCambio = () => {
+function calcularCambio() {
   const total = parseFloat(document.getElementById("total-venta").innerText) || 0;
   const entregado = parseFloat(document.getElementById("efectivo-entregado").value) || 0;
   const cambio = entregado - total;
   document.getElementById("cambio").innerText = (cambio > 0 ? cambio : 0).toFixed(2) + " €";
-};
+}
 
-/* =========================
-   GUARDAR VENTA (FINAL)
-========================= */
-window.guardarVenta = async () => {
-  // 1. Validaciones previas
+async function guardarVenta() {
   if (!cajaActualId) return alert("Error: La caja no está abierta.");
   if (ventaActual.length === 0) return alert("Añade productos a la venta.");
   if (!metodoPago) return alert("Selecciona un método de pago.");
@@ -259,7 +269,6 @@ window.guardarVenta = async () => {
   }
 
   try {
-    // 2. Comprobar que la caja sigue abierta (Seguridad Verifactu)
     const cajaSnap = await getDoc(doc(db, "cash_registers", cajaActualId));
     if (!cajaSnap.exists() || cajaSnap.data().estado !== "abierta") {
         alert("La caja ha sido cerrada desde otro terminal. Reiniciando...");
@@ -267,7 +276,6 @@ window.guardarVenta = async () => {
         return;
     }
 
-    // 3. Generar número legal y guardar
     const num = await generarNumeroLegal(db, "tickets");
     
     const docRef = await addDoc(collection(db, "sales"), {
@@ -278,11 +286,10 @@ window.guardarVenta = async () => {
       total_iva: Number(parseFloat(document.getElementById("total-iva").innerText).toFixed(4)),
       total: totalVenta,
       metodo_pago: metodoPago,
-      caja_id: cajaActualId, // Vínculo para el Cierre Z
+      caja_id: cajaActualId,
       efectivo_entregado: entregado
     });
 
-    // 4. Resetear interfaz
     alert("Venta guardada: " + num);
     ventaActual = [];
     metodoPago = null;
@@ -291,13 +298,23 @@ window.guardarVenta = async () => {
     document.getElementById("efectivo-entregado").value = "";
     renderizarTabla();
     
-    // 5. Imprimir
     window.open(`ticket.html?id=${docRef.id}`, "_blank");
 
   } catch (err) {
     console.error("Error al guardar venta:", err);
     alert("Hubo un error al guardar la venta.");
   }
-};
+}
 
-document.addEventListener("DOMContentLoaded", comprobarCajaAbierta);
+document.addEventListener("DOMContentLoaded", () => {
+  const btnAbrir = document.getElementById("btn-abrir-caja");
+  if (btnAbrir) btnAbrir.addEventListener("click", abrirCaja);
+  document.querySelectorAll(".pago-buttons .btn-pago").forEach(btn => {
+    btn.addEventListener("click", () => seleccionarPago(btn.dataset.pagoType || "", btn));
+  });
+  const entregadoInput = document.getElementById("efectivo-entregado");
+  if (entregadoInput) entregadoInput.addEventListener("input", calcularCambio);
+  const btnCobrar = document.getElementById("btn-cobrar");
+  if (btnCobrar) btnCobrar.addEventListener("click", guardarVenta);
+  comprobarCajaAbierta();
+});

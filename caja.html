@@ -23,7 +23,7 @@
         Efectivo Inicial (€)
         <input type="number" id="fondo-inicial" step="0.01" placeholder="0.00" autofocus>
       </label>
-      <button onclick="abrirCaja()" class="primary">🟢 Confirmar y Abrir Caja</button>
+      <button id="btn-abrir-caja" class="primary">🟢 Confirmar y Abrir Caja</button>
     </article>
   </section>
 
@@ -92,21 +92,21 @@
           <div>
             <h6>Forma de Pago</h6>
             <div class="pago-buttons">
-              <button class="btn-pago" onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
-              <button class="btn-pago" onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
+              <button class="btn-pago" id="btn-pago-efectivo" data-pago-type="efectivo">💶 Efectivo</button>
+              <button class="btn-pago" id="btn-pago-tarjeta" data-pago-type="tarjeta">💳 Tarjeta</button>
             </div>
             <p style="margin:10px 0 0 0;"><small>Seleccionado:</small> <strong id="pago-seleccionado">—</strong></p>
           </div>
 
           <div id="bloque-efectivo" style="display:none;">
             <label style="margin-bottom:0;">Entregado (€)
-              <input type="number" id="efectivo-entregado" step="0.01" oninput="calcularCambio()" placeholder="0.00">
+              <input type="number" id="efectivo-entregado" step="0.01" placeholder="0.00">
             </label>
             <p style="margin:0;">Cambio: <strong id="cambio" style="color: var(--primary); font-size: 1.2rem;">0.00 €</strong></p>
           </div>
 
           <div>
-            <button class="btn-cobrar" onclick="guardarVenta()">
+            <button class="btn-cobrar" id="btn-cobrar">
               💾 COBRAR TICKET
             </button>
           </div>

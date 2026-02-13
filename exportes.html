@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="css/style.css">
 
+  <script src="js/vendor/jspdf.umd.min.js"></script>
+  <script src="js/vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf-autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -33,7 +35,11 @@
           <input type="date" id="fecha-hasta">
         </label>
       </div>
-      <button class="primary" onclick="calcularResumen()">🔍 Calcular Resumen Fiscal</button>
+      <button class="primary" id="btn-calcular">🔍 Calcular Resumen Fiscal</button>
+      <div style="margin-top: 10px;">
+        <button class="secondary outline" id="btn-modo-basico">📄 Modo Básico</button>
+        <button class="secondary outline" id="btn-modo-avanzado">📚 Modo Avanzado</button>
+      </div>
     </article>
 
     <article id="resultado" class="content-card" style="display:none;">
@@ -46,15 +52,54 @@
         <li><span>IVA Repercutido:</span> <strong id="res-iva">0.00€</strong></li>
         <li><span>Reparación (Total ventas):</span> <strong id="res-reparacion">0.00€</strong></li>
         <li><span>Complementos (Total ventas):</span> <strong id="res-complementos">0.00€</strong></li>
+        <li><span>IVA Reparaciones:</span> <strong id="res-iva-reparacion">0.00€</strong></li>
+        <li><span>IVA Complementos:</span> <strong id="res-iva-complementos">0.00€</strong></li>
+        <li><span>Unidades Reparaciones:</span> <strong id="res-unidades-reparacion">0</strong></li>
+        <li><span>Unidades Complementos:</span> <strong id="res-unidades-complementos">0</strong></li>
         <li class="fila-total-factura">
           <span>TOTAL VENTAS:</span> <strong id="res-total" style="color: var(--primary);">0.00€</strong>
         </li>
+        <li><span>Pagos Efectivo:</span> <strong id="res-pagos-efectivo">0.00€</strong></li>
+        <li><span>Pagos Tarjeta:</span> <strong id="res-pagos-tarjeta">0.00€</strong></li>
       </ul>
 
       <footer class="grid" style="margin-top: 2rem;">
-        <button class="secondary outline" onclick="exportarCSV()">📄 Descargar CSV</button>
-        <button class="secondary outline" onclick="exportarExcel()">📊 Descargar Excel</button>
-        <button class="secondary outline" id="btn-exportar-pdf" onclick="exportarPDF()">🖨️ Descargar PDF</button>
+        <button class="secondary outline" id="btn-exportar-csv">📄 Descargar CSV</button>
+        <button class="secondary outline" id="btn-exportar-excel">📊 Descargar Excel</button>
+        <button class="secondary outline" id="btn-exportar-pdf">🖨️ Descargar PDF</button>
+        <button class="secondary outline" id="btn-exportar-whatsapp">📲 Enviar por WhatsApp</button>
+      </footer>
+    </article>
+
+    <article id="resultado-avanzado" class="content-card" style="display:none;">
+      <header>
+        <h4 style="margin:0;">📚 Detalle Avanzado</h4>
+      </header>
+      <div style="overflow-x:auto;">
+        <table class="tabla-ventas" role="grid" style="margin-bottom: 0;">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Ticket Nº</th>
+              <th>Pago</th>
+              <th>Rep. Base</th>
+              <th>Rep. IVA</th>
+              <th>Rep. Total</th>
+              <th>Comp. Base</th>
+              <th>Comp. IVA</th>
+              <th>Comp. Total</th>
+              <th>IVA Ticket</th>
+              <th>Total Ticket</th>
+            </tr>
+          </thead>
+          <tbody id="lista-avanzado">
+          </tbody>
+        </table>
+      </div>
+      <footer class="grid" style="margin-top: 2rem;">
+        <button class="secondary outline" id="btn-exportar-csv-adv">📄 Descargar CSV</button>
+        <button class="secondary outline" id="btn-exportar-excel-adv">📊 Descargar Excel</button>
+        <button class="secondary outline" id="btn-exportar-pdf-adv">🖨️ Descargar PDF</button>
       </footer>
     </article>
   </main>
