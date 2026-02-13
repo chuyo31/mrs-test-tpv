@@ -9,6 +9,9 @@ let ventaActual = [];
 let metodoPago = null;
 let cajaActualId = null;
 let categoriasLocal = [];
+let productosLocal = [];
+let productosLocalAll = [];
+let currentCategoriaId = null;
 
 async function comprobarCajaAbierta() {
   const q = query(collection(db, "cash_registers"), where("estado", "==", "abierta"), limit(1));
@@ -26,6 +29,7 @@ async function comprobarCajaAbierta() {
       if (abrir) abrir.style.display = "none";
       if (zona) zona.style.display = "block";
       cargarCategoriasCaja();
+      cargarTodosProductosCaja();
     }
   } catch (e) { console.error("Error al comprobar caja:", e); }
 }
@@ -69,44 +73,45 @@ async function cargarCategoriasCaja() {
       <span>${cat.nombre}</span>
     `;
     
-    btn.onclick = () => cargarProductosCaja(docSnap.id);
+    btn.onclick = () => cargarProductosCategoriaLocal(docSnap.id);
     divCat.appendChild(btn);
   });
   if(window.lucide) window.lucide.createIcons();
 }
 
-async function cargarProductosCaja(catId) {
+async function cargarTodosProductosCaja() {
+  const snap = await getDocs(collection(db, "products"));
+  productosLocalAll = [];
+  snap.forEach(docSnap => {
+    productosLocalAll.push({ id: docSnap.id, ...docSnap.data() });
+  });
+}
+
+function cargarProductosCategoriaLocal(catId) {
+  currentCategoriaId = catId;
+  const list = productosLocalAll.filter(p => p.categoria_id === catId);
   const divProd = document.getElementById("productos");
-  const q = query(collection(db, "products"), where("categoria_id", "==", catId));
-  const snap = await getDocs(q);
-  divProd.innerHTML = "";
-  
-  if (snap.empty) {
+  if (divProd) divProd.innerHTML = "";
+  if (!list.length && divProd) {
     divProd.innerHTML = "<div style='padding:20px; opacity:0.6;'>No hay productos en esta familia</div>";
     return;
   }
+  renderProductosGrid(list);
+  if(window.lucide) window.lucide.createIcons();
+}
 
-  snap.forEach(docSnap => {
-    const p = docSnap.data();
-    const id = docSnap.id;
+function renderProductosGrid(list) {
+  const divProd = document.getElementById("productos");
+  if (!divProd) return;
+  divProd.innerHTML = "";
+  list.forEach(p => {
     const btn = document.createElement("button");
     btn.className = "btn-producto-modern";
-    
-    const imgHtml = p.imagen_url 
-      ? `<img src="${p.imagen_url}" class="img-caja">`
-      : `<div class="img-placeholder"><i data-lucide="package"></i></div>`;
-
-    btn.innerHTML = `
-      ${imgHtml}
-      <div class="info">
-        <span class="nombre">${p.nombre}</span>
-        <span class="precio">${parseFloat(p.pvp).toFixed(2)}€</span>
-      </div>
-    `;
-    btn.addEventListener("click", () => agregarProductoVenta(id, p));
+    const imgHtml = p.imagen_url ? `<img src="${p.imagen_url}" class="img-caja">` : `<div class="img-placeholder"><i data-lucide="package"></i></div>`;
+    btn.innerHTML = `${imgHtml}<div class="info"><span class="nombre">${p.nombre}</span><span class="precio">${parseFloat(p.pvp).toFixed(2)}€</span></div>`;
+    btn.addEventListener("click", () => agregarProductoVenta(p.id, p));
     divProd.appendChild(btn);
   });
-  if(window.lucide) window.lucide.createIcons();
 }
 
 function agregarProductoVenta(id, data) {
@@ -224,6 +229,7 @@ function renderizarTabla() {
   document.getElementById("total-venta").innerText = totalFinal.toFixed(2) + " €";
   
   if (metodoPago === 'efectivo') calcularCambio();
+  actualizarEstadoCobro();
 }
 
 function cambiarCantidad(id, delta) {
@@ -240,6 +246,11 @@ function eliminarFila(id) {
   renderizarTabla();
 }
 
+function vaciarVenta() {
+  ventaActual = [];
+  renderizarTabla();
+}
+
 function seleccionarPago(tipo, target) {
   metodoPago = tipo;
   document.querySelectorAll('.btn-pago').forEach(b => b.classList.remove('active'));
@@ -247,6 +258,13 @@ function seleccionarPago(tipo, target) {
   document.getElementById("pago-seleccionado").innerText = tipo.toUpperCase();
   document.getElementById("bloque-efectivo").style.display = (tipo === 'efectivo') ? "block" : "none";
   renderizarTabla();
+}
+
+function actualizarEstadoCobro() {
+  const btn = document.getElementById("btn-cobrar");
+  if (!btn) return;
+  const habilitado = ventaActual.length > 0 && !!metodoPago;
+  btn.disabled = !habilitado;
 }
 
 function calcularCambio() {
@@ -316,5 +334,21 @@ document.addEventListener("DOMContentLoaded", () => {
   if (entregadoInput) entregadoInput.addEventListener("input", calcularCambio);
   const btnCobrar = document.getElementById("btn-cobrar");
   if (btnCobrar) btnCobrar.addEventListener("click", guardarVenta);
+  const btnVaciar = document.getElementById("btn-vaciar");
+  if (btnVaciar) btnVaciar.addEventListener("click", vaciarVenta);
+  const inputBuscar = document.getElementById("buscar-producto");
+  if (inputBuscar) {
+    inputBuscar.addEventListener("input", () => {
+      const q = inputBuscar.value.trim().toLowerCase();
+      if (!q) {
+        if (currentCategoriaId) cargarProductosCategoriaLocal(currentCategoriaId);
+        return;
+      }
+      const filtrados = productosLocalAll.filter(p => (p.nombre || "").toLowerCase().includes(q));
+      renderProductosGrid(filtrados);
+      if(window.lucide) window.lucide.createIcons();
+    });
+  }
   comprobarCajaAbierta();
+  actualizarEstadoCobro();
 });

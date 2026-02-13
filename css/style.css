@@ -751,3 +751,61 @@ input:focus, select:focus, textarea:focus {
     body { -webkit-print-color-adjust: exact; background: white !important; }
     #navbar-app, button, .side-nav { display: none !important; }
 }
+
+/* ==========================================
+   RESPONSIVE GLOBAL
+   ========================================== */
+/* Utilidades de alineación usadas en tablas */
+.right { text-align: right !important; }
+.text-center { text-align: center !important; }
+
+/* Contenedor de tablas para scroll horizontal en pantallas pequeñas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Altura mínima para objetivos táctiles cómodos */
+button, .btn-modern, .btn-pago, .btn-cobrar, .btn-icon-modern, .btn-modern-small {
+  min-height: 44px;
+}
+
+/* Breakpoints */
+@media (max-width: 1200px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 992px) {
+  .caja-grid { grid-template-columns: 1fr; }
+  .content-card, article { padding: 1.25rem; }
+  .pago-buttons { flex-wrap: wrap; gap: 8px; }
+  .btn-cobrar { height: 60px; font-size: 1.05rem; }
+  .modern-table th, .modern-table td { padding: 10px; }
+}
+
+@media (max-width: 768px) {
+  .input-group { grid-template-columns: 1fr; }
+  .span-2 { grid-column: span 1; }
+  .login-card { max-width: 100%; padding: 1rem; }
+  .modern-table th { font-size: 0.75rem; }
+  .modern-table td { font-size: 0.85rem; }
+  #categorias, #productos { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+  .btn-producto-modern .nombre { font-size: 0.8rem; }
+  .btn-producto-modern .precio { font-size: 0.85rem; }
+}
+
+@media (max-width: 576px) {
+  .config-grid { grid-template-columns: 1fr; gap: 20px; }
+  .side-nav-modern { position: static; }
+  .content-card, article { padding: 1rem; }
+  .btn-modern { min-width: unset; width: 100%; }
+  .save-bar-modern { right: 15px; bottom: 15px; }
+}
+
+@media (max-width: 420px) {
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.4rem; }
+  h3 { font-size: 1.2rem; }
+  .btn-cobrar { height: 54px; font-size: 1rem; }
+}

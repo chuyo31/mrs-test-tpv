@@ -24,7 +24,20 @@ async function calcularResumen() {
   const fDesde = Timestamp.fromDate(new Date(desde + "T00:00:00"));
   const fHasta = Timestamp.fromDate(new Date(hasta + "T23:59:59"));
   const q = query(collection(db, "sales"), where("fecha", ">=", fDesde), where("fecha", "<=", fHasta));
-  const snap = await getDocs(q);
+  let snap = await getDocs(q);
+  if (snap.empty) {
+    const all = await getDocs(collection(db, "sales"));
+    const docs = [];
+    all.forEach(d => {
+      const v = d.data();
+      const ts = v.fecha;
+      let djs = null;
+      if (ts && typeof ts.toDate === "function") djs = ts.toDate();
+      else if (typeof ts === "string") djs = new Date(ts);
+      if (djs && djs >= fDesde.toDate() && djs <= fHasta.toDate()) docs.push(d);
+    });
+    snap = { forEach: (fn) => docs.forEach(fn), empty: docs.length === 0 };
+  }
   const catsSnap = await getDocs(collection(db, "categories"));
   const catMap = {};
   catsSnap.forEach(dc => { const c = dc.data(); catMap[dc.id] = (c.nombre || "").toLowerCase(); });
@@ -44,6 +57,7 @@ async function calcularResumen() {
     if (pago === "tarjeta") totalesPagos.tarjeta += v.total || 0;
     let rep_base_ticket = 0, rep_iva_ticket = 0, rep_total_ticket = 0;
     let comp_base_ticket = 0, comp_iva_ticket = 0, comp_total_ticket = 0;
+    let rep_unid_ticket = 0, comp_unid_ticket = 0;
     let hasRepair = false, hasComplement = false;
     (v.lineas || []).forEach(l => {
       const cantidad = parseFloat(l.cantidad) || 0;
@@ -66,6 +80,7 @@ async function calcularResumen() {
         rep_base_ticket += baseLine;
         rep_iva_ticket += ivaLine;
         rep_total_ticket += totalLinea;
+        rep_unid_ticket += cantidad;
       } else {
         complementos += totalLinea; hasComplement = true;
         detalleCategorias.complementos.base += baseLine;
@@ -75,6 +90,7 @@ async function calcularResumen() {
         comp_base_ticket += baseLine;
         comp_iva_ticket += ivaLine;
         comp_total_ticket += totalLinea;
+        comp_unid_ticket += cantidad;
       }
     });
     const tipoTicket = hasRepair && hasComplement ? "MIXTO" : (hasRepair ? "REPARACIÓN" : "COMPLEMENTOS");
@@ -96,6 +112,8 @@ async function calcularResumen() {
       comp_base: comp_base_ticket,
       comp_iva: comp_iva_ticket,
       comp_total: comp_total_ticket,
+      rep_unid: rep_unid_ticket,
+      comp_unid: comp_unid_ticket,
       iva_ticket: Number(v.total_iva || 0),
       total_ticket: Number(v.total || 0)
     });
@@ -168,18 +186,18 @@ function exportarCSV() {
   let csv = "\ufeff";
   if (currentMode === "basico") {
     csv += "Resumen Básico\n";
-    csv += "Base IVA;IVA Repercutido;Total Ventas\n";
+    csv += "Base IVA (€);IVA Repercutido (€);Total Ventas (€)\n";
     csv += `${Number(totalesGlobales.baseIVA).toFixed(2)};${Number(totalesGlobales.totalIVA).toFixed(2)};${Number(totalesGlobales.totalVentas).toFixed(2)}\n\n`;
-    csv += "Categoria;Unidades;Base;IVA;Total\n";
+    csv += "Categoria;Unidades (unid);Base (€);IVA (€);Total (€)\n";
     csv += `Reparación;${unidades.reparacion};${detalleCategorias.reparacion.base.toFixed(2)};${detalleCategorias.reparacion.iva.toFixed(2)};${detalleCategorias.reparacion.total.toFixed(2)}\n`;
     csv += `Complementos;${unidades.complementos};${detalleCategorias.complementos.base.toFixed(2)};${detalleCategorias.complementos.iva.toFixed(2)};${detalleCategorias.complementos.total.toFixed(2)}\n\n`;
-    csv += "Pagos;Efectivo;Tarjeta\n";
+    csv += "Pagos;Efectivo (€);Tarjeta (€)\n";
     csv += `Totales;${totalesPagos.efectivo.toFixed(2)};${totalesPagos.tarjeta.toFixed(2)}\n`;
   } else {
-    csv += "Fecha;Ticket;Pago;Rep Base;Rep IVA;Rep Total;Comp Base;Comp IVA;Comp Total;IVA Ticket;Total Ticket\n";
+    csv += "Fecha;Ticket;Pago;Rep Unid (unid);Rep Base (€);Rep IVA (€);Rep Total (€);Comp Unid (unid);Comp Base (€);Comp IVA (€);Comp Total (€);IVA Ticket (€);Total Ticket (€)\n";
     const rows = advancedRows.length ? advancedRows : buildAdvancedRowsFallback();
     rows.forEach(r => {
-      csv += `${r.fecha};${r.ticket};${r.pago};${r.rep_base.toFixed(2)};${r.rep_iva.toFixed(2)};${r.rep_total.toFixed(2)};${r.comp_base.toFixed(2)};${r.comp_iva.toFixed(2)};${r.comp_total.toFixed(2)};${parseFloat(r.iva_ticket).toFixed(2)};${parseFloat(r.total_ticket).toFixed(2)}\n`;
+      csv += `${r.fecha};${r.ticket};${r.pago};${(r.rep_unid||0)};${r.rep_base.toFixed(2)};${r.rep_iva.toFixed(2)};${r.rep_total.toFixed(2)};${(r.comp_unid||0)};${r.comp_base.toFixed(2)};${r.comp_iva.toFixed(2)};${r.comp_total.toFixed(2)};${parseFloat(r.iva_ticket).toFixed(2)};${parseFloat(r.total_ticket).toFixed(2)}\n`;
     });
   }
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -199,29 +217,31 @@ function exportarExcel() {
       "FECHA": r.fecha,
       "TICKET Nº": r.ticket,
       "PAGO": r.pago,
-      "REP BASE": parseFloat(r.rep_base.toFixed(2)),
-      "REP IVA": parseFloat(r.rep_iva.toFixed(2)),
-      "REP TOTAL": parseFloat(r.rep_total.toFixed(2)),
-      "COMP BASE": parseFloat(r.comp_base.toFixed(2)),
-      "COMP IVA": parseFloat(r.comp_iva.toFixed(2)),
-      "COMP TOTAL": parseFloat(r.comp_total.toFixed(2)),
-      "IVA TICKET": parseFloat(r.iva_ticket),
-      "TOTAL TICKET": parseFloat(r.total_ticket)
+      "REP UNID (unid)": parseFloat((r.rep_unid||0)),
+      "REP BASE (€)": parseFloat(r.rep_base.toFixed(2)),
+      "REP IVA (€)": parseFloat(r.rep_iva.toFixed(2)),
+      "REP TOTAL (€)": parseFloat(r.rep_total.toFixed(2)),
+      "COMP UNID (unid)": parseFloat((r.comp_unid||0)),
+      "COMP BASE (€)": parseFloat(r.comp_base.toFixed(2)),
+      "COMP IVA (€)": parseFloat(r.comp_iva.toFixed(2)),
+      "COMP TOTAL (€)": parseFloat(r.comp_total.toFixed(2)),
+      "IVA TICKET (€)": parseFloat(r.iva_ticket),
+      "TOTAL TICKET (€)": parseFloat(r.total_ticket)
     })));
-    ws["!cols"] = [{ wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+    ws["!cols"] = [{ wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws, "Detalle Avanzado");
   } else {
     const ws = XLSX.utils.aoa_to_sheet([
       ["RESUMEN BÁSICO"],
-      ["Base IVA", Number(totalesGlobales.baseIVA).toFixed(2)],
-      ["IVA Repercutido", Number(totalesGlobales.totalIVA).toFixed(2)],
-      ["TOTAL VENTAS", Number(totalesGlobales.totalVentas).toFixed(2)],
+      ["Base IVA (€)", Number(totalesGlobales.baseIVA).toFixed(2)],
+      ["IVA Repercutido (€)", Number(totalesGlobales.totalIVA).toFixed(2)],
+      ["TOTAL VENTAS (€)", Number(totalesGlobales.totalVentas).toFixed(2)],
       [""],
-      ["CATEGORÍA", "UNIDADES", "BASE", "IVA", "TOTAL"],
+      ["CATEGORÍA", "UNIDADES (unid)", "BASE (€)", "IVA (€)", "TOTAL (€)"],
       ["REPARACIÓN", unidades.reparacion, Number(detalleCategorias.reparacion.base).toFixed(2), Number(detalleCategorias.reparacion.iva).toFixed(2), Number(detalleCategorias.reparacion.total).toFixed(2)],
       ["COMPLEMENTOS", unidades.complementos, Number(detalleCategorias.complementos.base).toFixed(2), Number(detalleCategorias.complementos.iva).toFixed(2), Number(detalleCategorias.complementos.total).toFixed(2)],
       [""],
-      ["PAGOS", "EFECTIVO", "TARJETA"],
+      ["PAGOS", "EFECTIVO (€)", "TARJETA (€)"],
       ["TOTALES", Number(totalesPagos.efectivo).toFixed(2), Number(totalesPagos.tarjeta).toFixed(2)]
     ]);
     ws["!cols"] = [{ wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
@@ -236,30 +256,34 @@ function exportarPDF() {
   ensurePdfLibs().then(({ jsPDF, pluginFn }) => {
     const doc = new jsPDF();
     if (currentMode === "avanzado") {
-      const head = [["Fecha", "Ticket Nº", "Pago", "Rep Base", "Rep IVA", "Rep Total", "Comp Base", "Comp IVA", "Comp Total", "IVA Ticket", "Total Ticket"]];
+      const head = [["Fecha", "Ticket Nº", "Pago", "Rep Unid", "Rep Base (€)", "Rep IVA (€)", "Rep Total (€)", "Comp Unid", "Comp Base (€)", "Comp IVA (€)", "Comp Total (€)", "IVA Ticket (€)", "Total Ticket (€)"]];
       const rows = advancedRows.length ? advancedRows : buildAdvancedRowsFallback();
-      const body = rows.map(r => [r.fecha, r.ticket, r.pago, r.rep_base.toFixed(2), r.rep_iva.toFixed(2), r.rep_total.toFixed(2), r.comp_base.toFixed(2), r.comp_iva.toFixed(2), r.comp_total.toFixed(2), parseFloat(r.iva_ticket).toFixed(2), parseFloat(r.total_ticket).toFixed(2)]);
+      const body = rows.map(r => [r.fecha, r.ticket, r.pago, (r.rep_unid||0), r.rep_base.toFixed(2), r.rep_iva.toFixed(2), r.rep_total.toFixed(2), (r.comp_unid||0), r.comp_base.toFixed(2), r.comp_iva.toFixed(2), r.comp_total.toFixed(2), parseFloat(r.iva_ticket).toFixed(2), parseFloat(r.total_ticket).toFixed(2)]);
       if (pluginFn) pluginFn(doc, { head, body, styles: { fontSize: 8 } }); else doc.autoTable({ head, body, styles: { fontSize: 8 } });
       const y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 20;
       doc.text(`TOTAL VENTAS: ${formatearEuros(totalesGlobales.totalVentas)}`, 14, y);
     } else {
-      const head = [["Concepto", "Valor"]];
-      const body = [
-        ["Base IVA (21%)", Number(totalesGlobales.baseIVA).toFixed(2)],
-        ["IVA Repercutido", Number(totalesGlobales.totalIVA).toFixed(2)],
-        ["TOTAL VENTAS", Number(totalesGlobales.totalVentas).toFixed(2)],
-        ["Reparación Unidades", String(unidades.reparacion)],
-        ["Reparación Base", Number(detalleCategorias.reparacion.base).toFixed(2)],
-        ["Reparación IVA", Number(detalleCategorias.reparacion.iva).toFixed(2)],
-        ["Reparación Total", Number(detalleCategorias.reparacion.total).toFixed(2)],
-        ["Complementos Unidades", String(unidades.complementos)],
-        ["Complementos Base", Number(detalleCategorias.complementos.base).toFixed(2)],
-        ["Complementos IVA", Number(detalleCategorias.complementos.iva).toFixed(2)],
-        ["Complementos Total", Number(detalleCategorias.complementos.total).toFixed(2)],
-        ["Pagos Efectivo", Number(totalesPagos.efectivo).toFixed(2)],
-        ["Pagos Tarjeta", Number(totalesPagos.tarjeta).toFixed(2)]
+      const head1 = [["Concepto", "Valor"]];
+      const body1 = [
+        ["Base IVA (21%) (€)", Number(totalesGlobales.baseIVA).toFixed(2)],
+        ["IVA Repercutido (€)", Number(totalesGlobales.totalIVA).toFixed(2)],
+        ["TOTAL VENTAS (€)", Number(totalesGlobales.totalVentas).toFixed(2)]
       ];
-      if (pluginFn) pluginFn(doc, { head, body, styles: { fontSize: 10 } }); else doc.autoTable({ head, body, styles: { fontSize: 10 } });
+      if (pluginFn) pluginFn(doc, { head: head1, body: body1, styles: { fontSize: 10 } }); else doc.autoTable({ head: head1, body: body1, styles: { fontSize: 10 } });
+      const y1 = doc.lastAutoTable ? doc.lastAutoTable.finalY + 6 : 20;
+      const head2 = [["Categoría", "Unidades (unid)", "Base (€)", "IVA (€)", "Total (€)"]];
+      const body2 = [
+        ["Reparación", String(unidades.reparacion), Number(detalleCategorias.reparacion.base).toFixed(2), Number(detalleCategorias.reparacion.iva).toFixed(2), Number(detalleCategorias.reparacion.total).toFixed(2)],
+        ["Complementos", String(unidades.complementos), Number(detalleCategorias.complementos.base).toFixed(2), Number(detalleCategorias.complementos.iva).toFixed(2), Number(detalleCategorias.complementos.total).toFixed(2)]
+      ];
+      if (pluginFn) pluginFn(doc, { head: head2, body: body2, startY: y1, styles: { fontSize: 10 } }); else doc.autoTable({ head: head2, body: body2, startY: y1, styles: { fontSize: 10 } });
+      const y2 = doc.lastAutoTable ? doc.lastAutoTable.finalY + 6 : y1 + 30;
+      const head3 = [["Pagos", "Efectivo (€)", "Tarjeta (€)"]];
+      const body3 = [["Totales", Number(totalesPagos.efectivo).toFixed(2), Number(totalesPagos.tarjeta).toFixed(2)]];
+      if (pluginFn) pluginFn(doc, { head: head3, body: body3, startY: y2, styles: { fontSize: 10 } }); else doc.autoTable({ head: head3, body: body3, startY: y2, styles: { fontSize: 10 } });
+      const y3 = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y2 + 40;
+      doc.text(`Reparaciones hechas: ${String(unidades.reparacion)} unid · Precio total: ${Number(detalleCategorias.reparacion.total).toFixed(2)} € · IVA: ${Number(detalleCategorias.reparacion.iva).toFixed(2)} €`, 14, y3);
+      doc.text(`Complementos vendidos: ${String(unidades.complementos)} unid · Precio total: ${Number(detalleCategorias.complementos.total).toFixed(2)} € · IVA: ${Number(detalleCategorias.complementos.iva).toFixed(2)} €`, 14, y3 + 6);
     }
     const fechaArchivo = document.getElementById("fecha-desde").value || "informe";
     doc.save(`Informe_Fiscal_${fechaArchivo}.pdf`);

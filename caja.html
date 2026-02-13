@@ -35,6 +35,9 @@
           <article class="venta-card">
             <header style="padding: 0.5rem 1rem; margin-bottom: 1rem;">
               <h4 style="margin:0;">🛒 Venta Actual</h4>
+              <div style="margin-top:8px; display:flex; gap:10px;">
+                <button class="secondary outline" id="btn-vaciar">🧹 Vaciar</button>
+              </div>
             </header>
             
             <div style="max-height: 400px; overflow-y: auto;">
@@ -62,12 +65,32 @@
                 <span>TOTAL</span>
                 <strong id="total-venta">0.00 €</strong>
               </div>
+              <div style="margin-top: 1rem;">
+                <h6>Forma de Pago</h6>
+                <div class="pago-buttons">
+                  <button class="btn-pago" id="btn-pago-efectivo" data-pago-type="efectivo">💶 Efectivo</button>
+                  <button class="btn-pago" id="btn-pago-tarjeta" data-pago-type="tarjeta">💳 Tarjeta</button>
+                </div>
+                <p style="margin:10px 0 0 0;"><small>Seleccionado:</small> <strong id="pago-seleccionado">—</strong></p>
+              </div>
+              <div id="bloque-efectivo" style="display:none; margin-top: 0.5rem;">
+                <label style="margin-bottom:0;">Entregado (€)
+                  <input type="number" id="efectivo-entregado" step="0.01" placeholder="0.00">
+                </label>
+                <p style="margin:0;">Cambio: <strong id="cambio" style="color: var(--primary); font-size: 1.2rem;">0.00 €</strong></p>
+              </div>
+              <div style="margin-top: 1rem;">
+                <button class="btn-cobrar" id="btn-cobrar">💾 COBRAR TICKET</button>
+              </div>
             </div>
           </article>
         </section>
 
         <section>
           <article class="panel-card">
+            <label style="margin-bottom:12px;">
+              <input type="search" id="buscar-producto" placeholder="Buscar producto en todo el catálogo">
+            </label>
             <div class="section-title" style="margin-bottom: 0.5rem;">
               <i data-lucide="layers" style="color: var(--primary);"></i>
               <span>Familias</span>
@@ -85,35 +108,7 @@
       </div>
     </main>
 
-    <footer class="cobro-footer">
-      <div class="container">
-        <div class="grid" style="align-items: end;">
-          
-          <div>
-            <h6>Forma de Pago</h6>
-            <div class="pago-buttons">
-              <button class="btn-pago" id="btn-pago-efectivo" data-pago-type="efectivo">💶 Efectivo</button>
-              <button class="btn-pago" id="btn-pago-tarjeta" data-pago-type="tarjeta">💳 Tarjeta</button>
-            </div>
-            <p style="margin:10px 0 0 0;"><small>Seleccionado:</small> <strong id="pago-seleccionado">—</strong></p>
-          </div>
-
-          <div id="bloque-efectivo" style="display:none;">
-            <label style="margin-bottom:0;">Entregado (€)
-              <input type="number" id="efectivo-entregado" step="0.01" placeholder="0.00">
-            </label>
-            <p style="margin:0;">Cambio: <strong id="cambio" style="color: var(--primary); font-size: 1.2rem;">0.00 €</strong></p>
-          </div>
-
-          <div>
-            <button class="btn-cobrar" id="btn-cobrar">
-              💾 COBRAR TICKET
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </footer>
+  
   </div>
 
   <script src="js/navbar.js" type="module"></script>
