@@ -10,6 +10,12 @@
     --muted-color: rgba(125,125,125,0.7);
     --muted-border-color: rgba(125,125,125,0.2);
     --input-bg: rgba(125,125,125,0.05);
+    /* Variables faltantes para fondos de componentes */
+    --input-background-color: var(--input-bg);
+    --code-background-color: rgba(125,125,125,0.08);
+    /* Overlay específico para sidebar de configuración */
+    --side-overlay-color: #000000;
+    --side-overlay-opacity: 0.06;
 }
 
 /* Soporte para temas oscuros forzados por data-theme */
@@ -20,6 +26,8 @@
     --muted-color: rgba(255,255,255,0.6);
     --muted-border-color: rgba(255,255,255,0.1);
     --input-bg: rgba(255,255,255,0.05);
+    --input-background-color: rgba(255,255,255,0.06);
+    --code-background-color: rgba(255,255,255,0.06);
 }
 
 /* Forzar que el fondo de la página use nuestra variable */
@@ -27,6 +35,17 @@ body {
     background-color: var(--background-color) !important;
     color: var(--color) !important;
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Overlay global para oscurecer/mejorar contraste cuando hay imagen de fondo */
+html::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: var(--bg-overlay-color, transparent);
+    opacity: var(--bg-overlay-opacity, 0);
+    z-index: 0;
 }
 
 /* Ajustes de Layout tipo App */
@@ -191,6 +210,22 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid var(--muted-border-color);
   border-radius: 16px;
   padding: 1rem;
+}
+.venta-subbar {
+  margin: 0 1rem 0.5rem 1rem;
+  padding: 8px 12px;
+  border: 1px solid var(--muted-border-color);
+  background: var(--input-background-color);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.venta-subbar-label {
+  font-weight: 700;
+  opacity: 0.8;
+  color: var(--color);
 }
 .modern-table { width: 100%; border-collapse: collapse; }
 .modern-table thead th { padding: 8px; border-bottom: 1px solid var(--muted-border-color); font-weight: 700; }
@@ -376,6 +411,36 @@ input:focus, select:focus, textarea:focus {
   border-color: #ef4444;
 }
 
+/* Menú del selector de tema del Navbar */
+.theme-switcher-menu {
+  background: var(--card-background-color);
+  border: 1px solid var(--muted-border-color);
+  z-index: 1000;
+}
+.theme-switcher-menu li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: var(--color);
+  text-decoration: none;
+}
+.theme-switcher-menu li a:hover {
+  background: rgba(var(--primary-rgb), 0.08);
+  color: var(--primary);
+}
+
+/* Selector de tema en Configuración */
+.theme-select-solid {
+  background: var(--card-background-color) !important;
+  border: 1px solid var(--muted-border-color) !important;
+  color: var(--color) !important;
+  border-radius: 12px !important;
+}
+.theme-select-solid:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1) !important;
+}
 /* --- CONFIGURACION PROFESIONAL --- */
 :root {
   --primary-rgb: 59, 130, 246; /* Default Blue RGB */
@@ -411,7 +476,25 @@ input:focus, select:focus, textarea:focus {
   position: sticky;
   top: 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  overflow: hidden;
 }
+
+.side-nav-modern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--side-overlay-color);
+  opacity: var(--side-overlay-opacity);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 20px;
+}
+
+.side-nav-modern > * {
+  position: relative;
+  z-index: 1;
+}
+
 
 .nav-item {
   width: 100%;
@@ -420,7 +503,7 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 8px;
   border-radius: 12px;
   border: none;
-  background: transparent;
+  background: rgba(var(--primary-rgb), 0.03);
   color: var(--color);
   font-weight: 600;
   display: flex;
@@ -428,7 +511,7 @@ input:focus, select:focus, textarea:focus {
   gap: 12px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .nav-item i {
@@ -438,7 +521,6 @@ input:focus, select:focus, textarea:focus {
 
 .nav-item:hover {
   background: rgba(var(--primary-rgb), 0.05);
-  opacity: 1;
   transform: translateX(5px);
 }
 
@@ -449,6 +531,22 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
+/* Reglas específicas para la sidebar moderna (evitar transparencia en temas claros) */
+.side-nav-modern .nav-item {
+  background: var(--input-background-color) !important;
+  border: 1px solid var(--muted-border-color) !important;
+  color: var(--color) !important;
+  opacity: 1 !important;
+}
+.side-nav-modern .nav-item:hover {
+  background: rgba(var(--primary-rgb), 0.08);
+  color: var(--primary);
+}
+.side-nav-modern .nav-item.active {
+  background: var(--primary);
+  color: var(--primary-inverse);
+  border-color: var(--primary);
+}
 .config-card-modern {
   background: var(--card-background-color);
   border-radius: 20px;

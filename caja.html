@@ -7,6 +7,8 @@
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css">
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -33,18 +35,17 @@
         
         <section>
           <article class="venta-card">
-            <header style="padding: 0.5rem 1rem; margin-bottom: 1rem;">
-              <h4 style="margin:0;">🛒 Venta Actual</h4>
-              <div style="margin-top:8px; display:flex; gap:10px;">
-                <button class="secondary outline" id="btn-vaciar">🧹 Vaciar</button>
+            <div class="venta-subbar">
+              <span class="venta-subbar-label">🛒 Venta actual</span>
+              <div style="display:flex; gap:10px;">
+                <button class="secondary outline" id="btn-vaciar" style="margin:0;">🧹 Vaciar</button>
               </div>
-            </header>
+            </div>
             
             <div style="max-height: 400px; overflow-y: auto;">
               <table id="tabla-venta" class="modern-table">
                 <thead>
                   <tr>
-                    <th>Producto</th>
                     <th class="text-center">Cant.</th>
                     <th>Precio</th>
                     <th class="right">Total</th>

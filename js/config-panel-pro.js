@@ -291,6 +291,22 @@ window.ajustarStockEntrada = async function(id) {
     cargarListasCatalogo();
 };
 
+// ======= DaisyUI Theme Mapping a variables de la app =======
+function readMappedColors() {
+    const cs = getComputedStyle(document.documentElement);
+    const primary = (cs.getPropertyValue('--color-primary') || cs.getPropertyValue('--p') || '#3b82f6').trim();
+    const card = (cs.getPropertyValue('--color-base-100') || cs.getPropertyValue('--b1') || '#ffffff').trim();
+    const text = (cs.getPropertyValue('--color-base-content') || cs.getPropertyValue('--bc') || '#11191f').trim();
+    return { primary, card, text };
+}
+
+function mapDaisyToAppVariables() {
+    const { primary, card, text } = readMappedColors();
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--card-background-color', card);
+    document.documentElement.style.setProperty('--color', text);
+}
+
 window.ajustarStockSalida = async function(id) {
     const qty = parseInt(prompt("Cantidad de salida (unid):") || "0", 10);
     if (!Number.isFinite(qty) || qty <= 0) return;
@@ -468,19 +484,80 @@ async function cargarPanelPro() {
             // No hay input color-texto en el nuevo HTML pero lo mantenemos por si acaso
         }
 
-        // Aplicar visualmente al cargar (Regla de Oro)
+        // Aplicar tema DaisyUI y mapear a variables de la app
         document.documentElement.setAttribute('data-theme', d.tema || "light");
-        document.documentElement.style.setProperty('--primary', d.color_corporativo || "#3b82f6");
-        document.documentElement.style.setProperty('--card-background-color', d.color_cajas || "#ffffff");
-        document.documentElement.style.setProperty('--color', d.color_texto || "#11191f");
-        if(d.color_fondo) document.documentElement.style.setProperty('--background-color', d.color_fondo);
+        mapDaisyToAppVariables();
+        // Fondo de la aplicación (color/imagen)
+        const bgMode = d.bg_mode || 'color';
+        const bgColor = d.bg_color || '#f4f7f9';
+        const bgImage = d.bg_image_url || null;
+        const bgSize = d.bg_size || 'cover';
+        const bgPosition = d.bg_position || 'center';
+        const bgRepeat = d.bg_repeat || 'no-repeat';
+        const bgAttach = d.bg_attach || 'fixed';
+        const bgOverlayColor = d.bg_overlay_color || '#000000';
+        const bgOverlayOpacity = Number.isFinite(d.bg_overlay_opacity) ? d.bg_overlay_opacity : 0.2;
+        const selMode = document.getElementById('bg-mode');
+        const inputColor = document.getElementById('bg-color');
+        const inputImage = document.getElementById('bg-image');
+        const preview = document.getElementById('bg-preview');
+        const selSize = document.getElementById('bg-size');
+        const selPosition = document.getElementById('bg-position');
+        const selRepeat = document.getElementById('bg-repeat');
+        const selAttach = document.getElementById('bg-attach');
+        const inputOverlayColor = document.getElementById('bg-overlay-color');
+        const inputOverlayOpacity = document.getElementById('bg-overlay-opacity');
+        if (selMode) selMode.value = bgMode;
+        if (inputColor) inputColor.value = bgColor;
+        if (selSize) selSize.value = bgSize;
+        if (selPosition) selPosition.value = bgPosition;
+        if (selRepeat) selRepeat.value = bgRepeat;
+        if (selAttach) selAttach.value = bgAttach;
+        if (inputOverlayColor) inputOverlayColor.value = bgOverlayColor;
+        if (inputOverlayOpacity) inputOverlayOpacity.value = Math.round(bgOverlayOpacity * 100);
+        if (preview) {
+            preview.style.backgroundImage = bgMode === 'image' && bgImage ? `url(${bgImage})` : 'none';
+            preview.style.backgroundColor = bgMode === 'color' ? bgColor : '';
+            preview.style.backgroundSize = bgSize === 'stretch' ? '100% 100%' : bgSize;
+            preview.style.backgroundPosition = bgPosition;
+            preview.style.backgroundRepeat = bgRepeat;
+        }
+        aplicarFondo({ mode: bgMode, color: bgColor, imageUrl: bgImage, size: bgSize, position: bgPosition, repeat: bgRepeat, attach: bgAttach, overlayColor: bgOverlayColor, overlayOpacity: bgOverlayOpacity });
 
         // Guardar en LocalStorage para otras páginas
         localStorage.setItem('theme', d.tema || "light");
-        localStorage.setItem('accent-color', d.color_corporativo || "#3b82f6");
-        localStorage.setItem('card-color', d.color_cajas || "#ffffff");
-        localStorage.setItem('text-color', d.color_texto || "#11191f");
-        if(d.color_fondo) localStorage.setItem('bg-color', d.color_fondo);
+        const mappedLoad = readMappedColors();
+        localStorage.setItem('accent-color', mappedLoad.primary);
+        localStorage.setItem('card-color', mappedLoad.card);
+        localStorage.setItem('text-color', mappedLoad.text);
+        // Sidebar overlay (oscurecer)
+        const sideEnable = d.side_overlay_enabled ?? true;
+        const sideColor = d.side_overlay_color || '#000000';
+        const sideOpacity = Number.isFinite(d.side_overlay_opacity) ? d.side_overlay_opacity : 0.06;
+        const chkSide = document.getElementById('side-overlay-enable');
+        const inpSideColor = document.getElementById('side-overlay-color');
+        const inpSideOpacity = document.getElementById('side-overlay-opacity');
+        if (chkSide) chkSide.checked = !!sideEnable;
+        if (inpSideColor) inpSideColor.value = sideColor;
+        if (inpSideOpacity) inpSideOpacity.value = Math.round((sideOpacity) * 100) / 100 * 100; // 0.06 => 6
+        document.documentElement.style.setProperty('--side-overlay-color', sideColor);
+        document.documentElement.style.setProperty('--side-overlay-opacity', String(sideEnable ? sideOpacity : 0));
+        localStorage.setItem('side-overlay-enable', String(sideEnable));
+        localStorage.setItem('side-overlay-color', sideColor);
+        localStorage.setItem('side-overlay-opacity', String(sideOpacity));
+        localStorage.setItem('bg-mode', bgMode);
+        localStorage.setItem('bg-size', bgSize);
+        localStorage.setItem('bg-position', bgPosition);
+        localStorage.setItem('bg-repeat', bgRepeat);
+        localStorage.setItem('bg-attach', bgAttach);
+        localStorage.setItem('bg-overlay-color', bgOverlayColor);
+        localStorage.setItem('bg-overlay-opacity', String(bgOverlayOpacity));
+        if (bgMode === 'color') {
+            localStorage.setItem('bg-color', bgColor);
+            localStorage.removeItem('bg-image-url');
+        } else if (bgMode === 'image' && bgImage) {
+            localStorage.setItem('bg-image-url', bgImage);
+        }
 
         if (d.logo_url) {
             const img = document.getElementById("logo-preview");
@@ -495,12 +572,19 @@ window.guardarPanelPro = async function () {
 
     const fileInput = document.getElementById("logo");
     let logoUrl = null;
+    const bgFileInput = document.getElementById("bg-image");
+    let bgImageUrl = null;
 
     try {
         if (fileInput && fileInput.files.length > 0) {
             const storageRef = ref(storage, "empresa/logo.png");
             await uploadBytes(storageRef, fileInput.files[0]);
             logoUrl = await getDownloadURL(storageRef);
+        }
+        if (bgFileInput && bgFileInput.files.length > 0) {
+            const storageRef = ref(storage, "fondo/app-background.jpg");
+            await uploadBytes(storageRef, bgFileInput.files[0]);
+            bgImageUrl = await getDownloadURL(storageRef);
         }
 
         const data = {
@@ -521,23 +605,53 @@ window.guardarPanelPro = async function () {
             doc_pago: document.getElementById("doc-pago")?.checked ?? true,
             nav_mostrar_logo: document.getElementById("nav-mostrar-logo")?.checked ?? false,
             tema: document.getElementById("tema-select")?.value || "light",
-            color_corporativo: document.getElementById("color")?.value || "#3b82f6",
-            color_cajas: document.getElementById("color-cajas")?.value || "#ffffff",
-            color_texto: getComputedStyle(document.documentElement).getPropertyValue('--color').trim(),
-            color_fondo: getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim(),
+            bg_mode: document.getElementById("bg-mode")?.value || "color",
+            bg_color: document.getElementById("bg-color")?.value || "#f4f7f9",
+            bg_size: document.getElementById("bg-size")?.value || "cover",
+            bg_position: document.getElementById("bg-position")?.value || "center",
+            bg_repeat: document.getElementById("bg-repeat")?.value || "no-repeat",
+            bg_attach: document.getElementById("bg-attach")?.value || "fixed",
+            bg_overlay_color: document.getElementById("bg-overlay-color")?.value || "#000000",
+            bg_overlay_opacity: (parseInt(document.getElementById("bg-overlay-opacity")?.value || "20", 10) / 100),
+            side_overlay_enabled: document.getElementById("side-overlay-enable")?.checked ?? true,
+            side_overlay_color: document.getElementById("side-overlay-color")?.value || "#000000",
+            side_overlay_opacity: (parseInt(document.getElementById("side-overlay-opacity")?.value || "6", 10) / 100),
             updated_at: new Date()
         };
 
         if (logoUrl) data.logo_url = logoUrl;
+        if (bgImageUrl) data.bg_image_url = bgImageUrl;
 
         await setDoc(doc(db, "settings", "panel_pro"), data, { merge: true });
         
-        // Sincronizar LocalStorage inmediatamente
+        // Aplicar y sincronizar LocalStorage con DaisyUI
+        document.documentElement.setAttribute('data-theme', data.tema);
+        mapDaisyToAppVariables();
+        const mappedSave = readMappedColors();
         localStorage.setItem('theme', data.tema);
-        localStorage.setItem('accent-color', data.color_corporativo);
-        localStorage.setItem('card-color', data.color_cajas);
-        localStorage.setItem('text-color', data.color_texto);
-        localStorage.setItem('bg-color', data.color_fondo);
+        localStorage.setItem('accent-color', mappedSave.primary);
+        localStorage.setItem('card-color', mappedSave.card);
+        localStorage.setItem('text-color', mappedSave.text);
+        localStorage.setItem('bg-mode', data.bg_mode);
+        localStorage.setItem('bg-size', data.bg_size);
+        localStorage.setItem('bg-position', data.bg_position);
+        localStorage.setItem('bg-repeat', data.bg_repeat);
+        localStorage.setItem('bg-attach', data.bg_attach);
+        localStorage.setItem('bg-overlay-color', data.bg_overlay_color);
+        localStorage.setItem('bg-overlay-opacity', String(data.bg_overlay_opacity));
+        localStorage.setItem('side-overlay-enable', String(data.side_overlay_enabled));
+        localStorage.setItem('side-overlay-color', data.side_overlay_color);
+        localStorage.setItem('side-overlay-opacity', String(data.side_overlay_opacity));
+        if (data.bg_mode === 'color') {
+            localStorage.setItem('bg-color', data.bg_color);
+            localStorage.removeItem('bg-image-url');
+        } else if (data.bg_mode === 'image' && (bgImageUrl || localStorage.getItem('bg-image-url'))) {
+            const url = bgImageUrl || localStorage.getItem('bg-image-url');
+            localStorage.setItem('bg-image-url', url);
+        }
+        aplicarFondo({ mode: data.bg_mode, color: data.bg_color, imageUrl: bgImageUrl || localStorage.getItem('bg-image-url') || null, size: data.bg_size, position: data.bg_position, repeat: data.bg_repeat, attach: data.bg_attach, overlayColor: data.bg_overlay_color, overlayOpacity: data.bg_overlay_opacity });
+        document.documentElement.style.setProperty('--side-overlay-color', data.side_overlay_color);
+        document.documentElement.style.setProperty('--side-overlay-opacity', String(data.side_overlay_enabled ? data.side_overlay_opacity : 0));
 
         alert("✅ Configuración guardada correctamente.");
         location.reload();
@@ -585,4 +699,82 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // Cambio inmediato de tema desde el selector
+    const sel = document.getElementById('tema-select');
+    if (sel) {
+        sel.addEventListener('change', () => {
+            document.documentElement.setAttribute('data-theme', sel.value);
+            mapDaisyToAppVariables();
+        });
+    }
+    // Vista previa de fondo
+    const bgMode = document.getElementById('bg-mode');
+    const bgColor = document.getElementById('bg-color');
+    const bgImage = document.getElementById('bg-image');
+    const bgPreview = document.getElementById('bg-preview');
+    const bgSize = document.getElementById('bg-size');
+    const bgPosition = document.getElementById('bg-position');
+    const bgRepeat = document.getElementById('bg-repeat');
+    const bgAttach = document.getElementById('bg-attach');
+    const bgOverlayColor = document.getElementById('bg-overlay-color');
+    const bgOverlayOpacity = document.getElementById('bg-overlay-opacity');
+    const sideEnable = document.getElementById('side-overlay-enable');
+    const sideColor = document.getElementById('side-overlay-color');
+    const sideOpacity = document.getElementById('side-overlay-opacity');
+    function updatePreview() {
+        const mode = bgMode?.value || 'color';
+        if (mode === 'image' && bgImage && bgImage.files.length > 0) {
+            const file = bgImage.files[0];
+            const url = URL.createObjectURL(file);
+            if (bgPreview) {
+                bgPreview.style.backgroundImage = `url(${url})`;
+                bgPreview.style.backgroundColor = '';
+            }
+        } else {
+            if (bgPreview) {
+                bgPreview.style.backgroundImage = 'none';
+                bgPreview.style.backgroundColor = bgColor?.value || '#f4f7f9';
+            }
+        }
+        if (bgPreview) {
+            const size = bgSize?.value || 'cover';
+            bgPreview.style.backgroundSize = size === 'stretch' ? '100% 100%' : size;
+            bgPreview.style.backgroundPosition = bgPosition?.value || 'center';
+            bgPreview.style.backgroundRepeat = bgRepeat?.value || 'no-repeat';
+        }
+        document.documentElement.style.setProperty('--bg-overlay-color', bgOverlayColor?.value || '#000000');
+        document.documentElement.style.setProperty('--bg-overlay-opacity', String((parseInt(bgOverlayOpacity?.value || '20', 10) / 100)));
+        document.documentElement.style.setProperty('--side-overlay-color', sideColor?.value || '#000000');
+        document.documentElement.style.setProperty('--side-overlay-opacity', String((sideEnable?.checked ? (parseInt(sideOpacity?.value || '6', 10) / 100) : 0)));
+    }
+    if (bgMode) bgMode.addEventListener('change', updatePreview);
+    if (bgColor) bgColor.addEventListener('input', updatePreview);
+    if (bgImage) bgImage.addEventListener('change', updatePreview);
+    if (bgSize) bgSize.addEventListener('change', updatePreview);
+    if (bgPosition) bgPosition.addEventListener('change', updatePreview);
+    if (bgRepeat) bgRepeat.addEventListener('change', updatePreview);
+    if (bgAttach) bgAttach.addEventListener('change', updatePreview);
+    if (bgOverlayColor) bgOverlayColor.addEventListener('input', updatePreview);
+    if (bgOverlayOpacity) bgOverlayOpacity.addEventListener('input', updatePreview);
+    if (sideEnable) sideEnable.addEventListener('change', updatePreview);
+    if (sideColor) sideColor.addEventListener('input', updatePreview);
+    if (sideOpacity) sideOpacity.addEventListener('input', updatePreview);
 });
+
+// ======= Fondo de la aplicación (color/imagen) =======
+function aplicarFondo({ mode, color, imageUrl, size, position, repeat, attach, overlayColor, overlayOpacity }) {
+    if (mode === 'image' && imageUrl) {
+        document.body.style.backgroundImage = `url(${imageUrl})`;
+        document.body.style.backgroundSize = (size === 'stretch') ? '100% 100%' : (size || 'cover');
+        document.body.style.backgroundPosition = position || 'center';
+        document.body.style.backgroundRepeat = repeat || 'no-repeat';
+        document.body.style.backgroundAttachment = attach || 'fixed';
+        document.documentElement.style.setProperty('--background-color', 'transparent');
+    } else {
+        document.body.style.backgroundImage = 'none';
+        document.documentElement.style.setProperty('--background-color', color || '#f4f7f9');
+    }
+    document.documentElement.style.setProperty('--bg-overlay-color', overlayColor || '#000000');
+    document.documentElement.style.setProperty('--bg-overlay-opacity', String(overlayOpacity ?? 0));
+}

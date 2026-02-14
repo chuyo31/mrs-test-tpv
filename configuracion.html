@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css">
   <!-- Iconos Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -82,7 +84,7 @@
           <div style="display: flex; align-items: center; gap: 30px;">
             <div style="flex-grow: 1;">
               <input type="file" id="logo" accept="image/*" style="margin-bottom: 0;">
-              <small style="opacity: 0.6;">Se recomienda formato PNG transparente.</small>
+              
             </div>
             <div id="logo-preview-container" style="width: 120px; height: 120px; border: 2px dashed var(--muted-border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
               <img id="logo-preview" style="display:none; max-width:100%; max-height:100%;">
@@ -239,58 +241,134 @@
             <i data-lucide="palette" style="color: var(--primary);"></i>
             <span>Personalización de la Interfaz</span>
           </div>
-
-          <label style="font-weight: 600; margin-bottom: 1rem; display: block;">Elige un Estilo Maestro</label>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 2rem;">
-            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('modern-blue')">
-              <div style="height: 40px; background: #3b82f6; border-radius: 6px; margin-bottom: 8px;"></div>
-              <span style="font-size: 0.8rem; font-weight: 600;">Azul Moderno</span>
-            </div>
-            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('dark-emerald')">
-              <div style="height: 40px; background: #10b981; border-radius: 6px; margin-bottom: 8px;"></div>
-              <span style="font-size: 0.8rem; font-weight: 600;">Esmeralda Nocturno</span>
-            </div>
-            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('royal-purple')">
-              <div style="height: 40px; background: #8b5cf6; border-radius: 6px; margin-bottom: 8px;"></div>
-              <span style="font-size: 0.8rem; font-weight: 600;">Púrpura Real</span>
-            </div>
-            <div class="theme-preview-card" onclick="aplicarTemaPreestablecido('oled-dark')">
-              <div style="height: 40px; background: #000000; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;"></div>
-              <span style="font-size: 0.8rem; font-weight: 600;">OLED Dark</span>
+          
+          <p style="opacity: 0.8; margin-bottom: 1rem;">Selecciona un tema DaisyUI. Se aplicará al resto de la aplicación.</p>
+          <div class="input-grid-modern" style="grid-template-columns: 1fr;">
+            <div class="input-field-modern">
+              <label>Tema DaisyUI</label>
+              <select id="tema-select" class="theme-select-solid" style="margin:0;">
+                <option value="light">light</option>
+                <option value="dark">dark</option>
+                <option value="cupcake">cupcake</option>
+                <option value="bumblebee">bumblebee</option>
+                <option value="emerald">emerald</option>
+                <option value="corporate">corporate</option>
+                <option value="synthwave">synthwave</option>
+                <option value="retro">retro</option>
+                <option value="dracula">dracula</option>
+                <option value="business">business</option>
+                <option value="night">night</option>
+                <option value="winter">winter</option>
+                <option value="coffee">coffee</option>
+                <option value="aqua">aqua</option>
+                <option value="nord">nord</option>
+                <option value="sunset">sunset</option>
+              </select>
+              <small style="opacity: 0.6;">Usa el selector para probar. Se guarda al pulsar “Guardar”.</small>
             </div>
           </div>
-
-          <hr style="margin: 2rem 0;">
-
+          
+          <hr style="margin: 1.5rem 0;">
+          
           <div class="input-grid-modern">
             <div class="input-field-modern">
-              <label>Color de Acento</label>
-              <div style="display: flex; gap: 10px;">
-                <input type="color" id="color" oninput="previewColor('--primary', this.value)" style="width: 60px; height: 45px; padding: 2px;">
-                <input type="text" id="color-hex" readonly style="flex-grow: 1; font-family: monospace;">
-              </div>
+              <label>Fondo de la aplicación</label>
+              <select id="bg-mode" style="margin:0;">
+                <option value="color">Color</option>
+                <option value="image">Imagen</option>
+              </select>
+              <small style="opacity: 0.6;">Elige si quieres color uniforme o imagen.</small>
             </div>
             <div class="input-field-modern">
-              <label>Color de Paneles</label>
-              <div style="display: flex; gap: 10px;">
-                <input type="color" id="color-cajas" oninput="actualizarCajaYContraste(this.value)" style="width: 60px; height: 45px; padding: 2px;">
-                <input type="text" id="color-cajas-hex" readonly style="flex-grow: 1; font-family: monospace;">
-              </div>
+              <label>Color de fondo</label>
+              <input type="color" id="bg-color" value="#f4f7f9" style="width: 60px; height: 45px; padding: 2px;">
+              <small style="opacity: 0.6;">Se usará cuando el modo sea “Color”.</small>
             </div>
             <div class="input-field-modern">
-              <label>Modo de Base</label>
-              <select id="tema-select" onchange="document.documentElement.setAttribute('data-theme', this.value)" style="margin:0;">
-                <option value="light">☀️ Modo Claro</option>
-                <option value="dark">🌙 Modo Oscuro</option>
+              <label>Imagen de fondo</label>
+              <input type="file" id="bg-image" accept="image/*" style="padding: 8px; font-size: 0.75rem;">
+              <small style="opacity: 0.6;">Se usará cuando el modo sea “Imagen”.</small>
+            </div>
+            <div class="input-field-modern">
+              <label>Tamaño imagen</label>
+              <select id="bg-size" style="margin:0;">
+                <option value="cover">Cubrir</option>
+                <option value="contain">Contener</option>
+                <option value="stretch">Estirar</option>
+                <option value="auto">Auto</option>
               </select>
             </div>
+            <div class="input-field-modern">
+              <label>Posición</label>
+              <select id="bg-position" style="margin:0;">
+                <option value="center">Centro</option>
+                <option value="top">Arriba</option>
+                <option value="bottom">Abajo</option>
+                <option value="left">Izquierda</option>
+                <option value="right">Derecha</option>
+              </select>
+            </div>
+            <div class="input-field-modern">
+              <label>Repetición</label>
+              <select id="bg-repeat" style="margin:0;">
+                <option value="no-repeat">Sin repetir</option>
+                <option value="repeat">Repetir</option>
+              </select>
+            </div>
+            <div class="input-field-modern">
+              <label>Desplazamiento</label>
+              <select id="bg-attach" style="margin:0;">
+                <option value="fixed">Fijo</option>
+                <option value="scroll">Scroll</option>
+              </select>
+            </div>
+            <div class="input-field-modern">
+              <label>Overlay (oscurecer)</label>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <input type="color" id="bg-overlay-color" value="#000000" style="width:60px; height:45px; padding:2px;">
+                <input type="range" id="bg-overlay-opacity" min="0" max="80" value="20" style="flex:1;">
+              </div>
+              <small style="opacity:0.6;">Ajusta color y opacidad para mejorar contraste.</small>
+            </div>
           </div>
-
-          <div style="margin-top: 2rem; padding: 20px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--muted-border-color);">
+          
+          <div style="margin-top: 1rem; display:flex; align-items:center; gap:12px;">
+            <div id="bg-preview" style="width: 120px; height: 80px; border: 1px solid var(--muted-border-color); border-radius: 12px; background: var(--background-color); background-size: cover; background-position: center;"></div>
+            <small style="opacity: 0.6;">Vista previa del fondo</small>
+          </div>
+          
+          <div style="margin-top: 2rem;">
+            <button class="btn btn-primary">Botón de prueba</button>
+            <label class="toggle" style="display:inline-flex; align-items:center; gap:8px; margin-left: 12px;">
+              <input type="checkbox"> Toggle
+            </label>
+          </div>
+          
+          <hr style="margin: 1.5rem 0;">
+          
+          <div style="padding: 16px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--muted-border-color);">
             <label style="margin: 0; display: flex; align-items: center; gap: 10px;">
               <input type="checkbox" id="nav-mostrar-logo">
-              <span>Mostrar logotipo de empresa en la barra de navegación superior</span>
+              <span>Mostrar logotipo en la barra superior y ocultar el nombre</span>
             </label>
+            <small style="opacity: 0.6;">Si no hay logo subido, se mostrará el nombre.</small>
+          </div>
+
+          <hr style="margin: 1.5rem 0;">
+
+          <div class="input-grid-modern">
+            <div class="input-field-modern" style="grid-column: span 2;">
+              <label>Sidebar · Overlay (oscurecer)</label>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                  <input type="checkbox" id="side-overlay-enable" checked>
+                  <span>Fijo</span>
+                </label>
+                <input type="color" id="side-overlay-color" value="#000000" style="width: 60px; height: 45px; padding: 2px;">
+                <input type="range" id="side-overlay-opacity" min="0" max="30" value="6" style="flex:1;">
+              </div>
+              <small style="opacity:0.6;">Aplica una capa de oscurecimiento sobre la barra lateral para mejorar contraste en temas claros.</small>
+            </div>
           </div>
         </article>
       </section>
@@ -326,7 +404,7 @@
 </script>
 
 <script src="js/navbar.js" type="module"></script>
-<script src="js/config-panel-pro.js?v=inv-1" type="module"></script>
+<script src="js/config-panel-pro.js?v=daisy-1" type="module"></script>
 
 </body>
 </html>

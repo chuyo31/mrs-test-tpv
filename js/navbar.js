@@ -5,9 +5,29 @@ import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth
 // --- REGLA DE ORO: CARGA DE TEMAS INMEDIATA ---
 const savedTheme = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
-
-const savedAccent = localStorage.getItem('accent-color') || '#3b82f6';
-document.documentElement.style.setProperty('--primary', savedAccent);
+// DaisyUI -> variables de la app
+function readMappedColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const primary = (cs.getPropertyValue('--color-primary') || cs.getPropertyValue('--p') || '#3b82f6').trim();
+  const card = (cs.getPropertyValue('--color-base-100') || cs.getPropertyValue('--b1') || '#ffffff').trim();
+  const text = (cs.getPropertyValue('--color-base-content') || cs.getPropertyValue('--bc') || '#11191f').trim();
+  return { primary, card, text };
+}
+function mapDaisyToAppVariables() {
+  const { primary, card, text } = readMappedColors();
+  document.documentElement.style.setProperty('--primary', primary);
+  document.documentElement.style.setProperty('--card-background-color', card);
+  let autoText = text;
+  if (card && card.startsWith('#') && card.length === 7) {
+    const r = parseInt(card.substr(1, 2), 16);
+    const g = parseInt(card.substr(3, 2), 16);
+    const b = parseInt(card.substr(5, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    autoText = (yiq >= 150) ? '#11191f' : '#ffffff';
+  }
+  document.documentElement.style.setProperty('--color', autoText);
+}
+mapDaisyToAppVariables();
 // -----------------------------------------------------------------
 
 async function inyectarNavbar() {
@@ -38,8 +58,8 @@ async function inyectarNavbar() {
       <ul>
         <li>
             <details role="list" dir="rtl" style="margin-bottom: 0;">
-                <summary aria-haspopup="listbox" role="link" class="secondary" style="padding: 0 10px; border: none; background: transparent;"><i data-lucide="palette"></i></summary>
-                <ul role="listbox" style="border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                <summary aria-haspopup="listbox" role="link" class="secondary" style="padding: 0 10px; border: 1px solid var(--muted-border-color); background: var(--input-background-color); border-radius: 10px;"><i data-lucide="palette"></i></summary>
+                <ul role="listbox" class="theme-switcher-menu" style="background: var(--card-background-color); border: 1px solid var(--muted-border-color); border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); z-index: 1000;">
                     <li><a href="#" data-theme-switcher="light"><i data-lucide="sun"></i> Claro</a></li>
                     <li><a href="#" data-theme-switcher="dark"><i data-lucide="moon"></i> Oscuro</a></li>
                 </ul>
@@ -58,17 +78,44 @@ async function inyectarNavbar() {
     }
 
     // Aplicar tema guardado inmediatamente al cargar el navbar (Regla de Oro)
-    const theme = localStorage.getItem('theme') || 'light';
-  const accent = localStorage.getItem('accent-color') || '#3b82f6';
-  const card = localStorage.getItem('card-color') || '#ffffff';
-  const text = localStorage.getItem('text-color') || '#11191f';
+  const theme = localStorage.getItem('theme') || 'light';
+  const { primary: accent, card, text } = readMappedColors();
   const bg = localStorage.getItem('bg-color');
 
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.style.setProperty('--primary', accent);
   document.documentElement.style.setProperty('--card-background-color', card);
-  document.documentElement.style.setProperty('--color', text);
+  let autoText = text;
+  if (card && card.startsWith('#') && card.length === 7) {
+    const r2 = parseInt(card.substr(1, 2), 16);
+    const g2 = parseInt(card.substr(3, 2), 16);
+    const b2 = parseInt(card.substr(5, 2), 16);
+    const yiq2 = ((r2 * 299) + (g2 * 587) + (b2 * 114)) / 1000;
+    autoText = (yiq2 >= 150) ? '#11191f' : '#ffffff';
+  }
+  document.documentElement.style.setProperty('--color', autoText);
   if (bg) document.documentElement.style.setProperty('--background-color', bg);
+  const bgMode = localStorage.getItem('bg-mode');
+  const bgImageUrl = localStorage.getItem('bg-image-url');
+  const bgSize = localStorage.getItem('bg-size') || 'cover';
+  const bgPosition = localStorage.getItem('bg-position') || 'center';
+  const bgRepeat = localStorage.getItem('bg-repeat') || 'no-repeat';
+  const bgAttach = localStorage.getItem('bg-attach') || 'fixed';
+  const overlayColor = localStorage.getItem('bg-overlay-color') || '#000000';
+  const overlayOpacity = parseFloat(localStorage.getItem('bg-overlay-opacity') || '0') || 0;
+  if (bgMode === 'image' && bgImageUrl) {
+    document.body.style.backgroundImage = `url(${bgImageUrl})`;
+    document.body.style.backgroundSize = (bgSize === 'stretch') ? '100% 100%' : bgSize;
+    document.body.style.backgroundRepeat = bgRepeat;
+    document.body.style.backgroundPosition = bgPosition;
+    document.body.style.backgroundAttachment = bgAttach;
+    document.documentElement.style.setProperty('--background-color', 'transparent');
+  } else if (bgMode === 'color' && bg) {
+    document.body.style.backgroundImage = 'none';
+    document.documentElement.style.setProperty('--background-color', bg);
+  }
+  document.documentElement.style.setProperty('--bg-overlay-color', overlayColor);
+  document.documentElement.style.setProperty('--bg-overlay-opacity', String(overlayOpacity));
 
     // Recalcular inversos por si acaso
     const r = parseInt(accent.substr(1, 2), 16);
@@ -96,6 +143,7 @@ document.addEventListener('click', e => {
         localStorage.setItem('theme', theme);
         const selectConfig = document.getElementById("tema-select");
         if(selectConfig) selectConfig.value = theme;
+        mapDaisyToAppVariables();
     }
 });
 
