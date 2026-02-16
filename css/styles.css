@@ -1,0 +1,354 @@
+/* Layout base de página: cuerpo y área principal */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Tablas y elementos comunes de interfaz */
+table thead th {
+  background-color: var(--card-background-color);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+dialog article {
+  max-width: 500px;
+}
+
+/* Colores de ayuda para estados de texto */
+.text-success {
+  color: #10b981;
+}
+.text-danger {
+  color: #ef4444;
+}
+.text-warning {
+  color: #f59e0b;
+}
+
+/* Caja: tarjeta de pago debajo del total */
+.pago-card {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+/* Caja: distribución con panel derecho más estrecho */
+.grid-caja {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .grid-caja {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================
+   Configuración: Layout general
+   ============================ */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 0;
+  margin-top: 24px;
+  background: #020617;
+  border-radius: 12px;
+  border: 1px solid #111827;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.7);
+  overflow: hidden;
+}
+
+/* ============================
+   Configuración: Sidebar
+   ============================ */
+.settings-sidebar {
+  padding: 18px 12px;
+  border-right: 1px solid #111827;
+  background: #050816;
+}
+.settings-sidebar-title {
+  margin: 0 0 12px 8px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}
+.settings-sidebar button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.settings-sidebar button:hover,
+.settings-sidebar button.active {
+  background: #111827;
+  color: #e5e7eb;
+}
+.settings-sidebar-cta {
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* ============================
+   Configuración: Panel principal
+   ============================ */
+.settings-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+}
+.settings-main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.settings-main-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+.settings-main-subtitle {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+.settings-main-actions {
+  display: flex;
+  gap: 8px;
+}
+.settings-main-actions button {
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+/* ============================
+   Configuración: Tarjetas
+   ============================ */
+.settings-card {
+  background: #050816;
+  border-radius: 10px;
+  padding: 1.4rem;
+  border: 1px solid #111827;
+  margin-bottom: 1rem;
+}
+
+/* ============================
+   Configuración: Tabs y animación
+   ============================ */
+.tab-section {
+  display: none;
+  animation: fadeIn 0.25s ease;
+}
+.tab-section.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================
+   Configuración: Utilidades de grid
+   ============================ */
+.input-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.span-2 {
+  grid-column: span 2;
+}
+
+/* ============================
+   Configuración: Selector de tema
+   ============================ */
+.theme-preview {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.theme-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.theme-dot.selected {
+  border-color: #e5e7eb;
+}
+
+/* ============================
+   Configuración: Listas y tablas
+   ============================ */
+#lista-categorias-config {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+.prod-table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+/* Ajuste de tamaño general de tabla en Configuración */
+.settings-main table {
+  font-size: 0.85rem;
+}
+.settings-main td,
+.settings-main th {
+  padding: 8px;
+}
+/* Barra superior de navegación global (topbar) */
+.topbar {
+  width: 100%;
+  height: 50px;
+  background-color: #050816;
+  color: #a5bfff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid #111827;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.35);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  margin-bottom: 1px;
+}
+
+/* Contenido centrado y alineado con el ancho del contenedor */
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topbar-icon {
+  background: transparent;
+  border: none;
+  color: #6b8cff;
+  padding: 2px 6px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.topbar-icon:hover {
+  background-color: #10162b;
+  color: #e5e7eb;
+}
+
+/* Sección central: páginas del sistema como píldoras */
+.topbar-pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.topbar-link {
+  color: #a5bfff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.topbar-link-text {
+  font-size: 20px;
+}
+
+.topbar-link:hover {
+  background-color: #10162b;
+  color: #e5e7eb;
+}
+
+.topbar-link.active {
+  background-color: #0f172a;
+  color: #e5e7eb;
+}
+
+.topbar-link-icon {
+  width: 50px;
+  display: inline-flex;
+  justify-content: center;
+}
+
+/* Sección derecha: acciones secundarias + branding */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 22px;
+  background-color: #1e293b;
+  margin: 0 6px 0 8px;
+}
+
+.topbar-user {
+  font-size: 14px;
+  color: #e5e7eb;
+}
+
+.topbar-logo {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.topbar-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #3b82f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  margin-left: 4px;
+}
+/* Navbar: eliminado por petición del usuario. Mantener estilos básicos ajenos a navbar. */

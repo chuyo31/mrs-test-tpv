@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/styles.css">
+
+<!-- fin de los estilos css-->
+  <meta charset="UTF-8">
+  <title>MRS TPV · Historial de ventas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    button.error { color: #c0392b; border-color: #c0392b; }
+    button.error:hover { background-color: #c0392b; color: white; }
+    td { vertical-align: middle; }
+    button.outline { padding: 4px 8px; font-size: 0.8rem; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+
+  <div id="topbar-app"></div>
+
+<main class="container">
+  <h3>Historial de ventas</h3>
+
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Nº Documento</th>
+          <th>Total</th>
+          <th>Pago</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="lista-ventas"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="js/topbar.js" type="module"></script>
+<script src="js/auth.js" type="module"></script>
+<script src="js/historial.js" type="module"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const rol = sessionStorage.getItem("rol");
+  if (!rol) return location.href = "login.html";
+});
+</script>
+
+</body>
+</html>

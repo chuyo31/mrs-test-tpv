@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!--estilos css-->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+
+<!-- fin de los estilos css-->
+  <meta charset="UTF-8">
+  <title>Configuración · MRS TPV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+
+  <div id="topbar-app"></div>
+
+<main class="container">
+  <div class="settings-layout">
+    
+    <aside class="settings-sidebar">
+      <h5 class="settings-sidebar-title">Ajustes</h5>
+      <button onclick="switchTab('empresa', this)" class="active">🏢 Empresa</button>
+      <button onclick="switchTab('documentos', this)">🧾 Documentos</button>
+      <button onclick="switchTab('catalogo', this)">📂 Catálogo</button>
+      <button onclick="switchTab('temas', this)">🎨 Temas e Interfaz</button>
+      <button class="primary settings-sidebar-cta" onclick="guardarPanelPro()">💾 Guardar Cambios</button>
+    </aside>
+
+    <div class="settings-main">
+      <header class="settings-main-header">
+        <div>
+          <h2 class="settings-main-title">Panel de configuración</h2>
+          <p class="settings-main-subtitle">Gestiona datos de empresa, documentos, catálogo y temas.</p>
+        </div>
+        <div class="settings-main-actions">
+          <button class="secondary" type="button" onclick="location.reload()">Recargar</button>
+          <button class="primary" type="button" onclick="guardarPanelPro()">Guardar</button>
+        </div>
+      </header>
+
+      <section id="catalogo" class="tab-section">
+        <article class="settings-card">
+          <p class="settings-main-subtitle">Define familias de productos y gestiona el catálogo que aparece en la Caja.</p>
+          <div class="grid">
+            
+            <div style="border-right: 1px solid var(--border-color); padding-right: 20px;">
+              <h4>📁 Familias</h4>
+              <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <input type="hidden" id="cat-id-edit"> 
+                
+                <label>Nombre</label>
+                <input id="cat-nombre" placeholder="Ej: Fundas">
+                
+                <label>Fiscal</label>
+                <select id="cat-fiscal">
+                  <option value="IVA">Solo IVA (Servicios)</option>
+                  <option value="IVA_RE">IVA + RE (Venta)</option>
+                </select>
+
+                <label style="font-size: 0.75rem;">Imagen (opcional)
+                  <input type="file" id="cat-img" accept="image/*">
+                </label>
+
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                  <button id="btn-cat-guardar" class="outline" onclick="crearCategoria()" style="flex: 2; margin: 0; font-size: 0.8rem;">Crear/Guardar</button>
+                  <button id="btn-cat-cancelar" onclick="limpiarFormCat()" style="flex: 1; display: none; background: #ff4d4d; border: none; margin: 0;">✖</button>
+                </div>
+              </div>
+              <ul id="lista-categorias-config"></ul>
+            </div>
+
+            <div>
+              <h4>📦 Nuevo Producto</h4>
+              <div class="input-group">
+                <input id="prod-nombre" placeholder="Nombre del artículo" class="span-2">
+                
+                <select id="prod-cat-select" class="span-2">
+                  <option value="">Selecciona Familia...</option>
+                </select>
+
+                <label>Precio Venta (PVP)
+                  <input type="number" id="prod-venta" step="0.01" placeholder="0.00">
+                </label>
+
+                <label>Foto Producto
+                  <input type="file" id="prod-img" accept="image/*">
+                </label>
+              </div>
+              <button style="width: 100%; margin-top: 20px;" onclick="guardarProducto()">✨ Guardar Producto</button>
+
+              <hr>
+              <h5>Productos en Sistema</h5>
+              <div class="prod-table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>PVP</th>
+                      <th>Familia</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-productos-body">
+                    </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </article>
+      </section>
+
+      <section id="empresa" class="tab-section active">
+        <article class="settings-card">
+          <h3>Datos de Empresa</h3>
+          <p class="settings-main-subtitle">Completa la información fiscal y de contacto que se mostrará en tickets, facturas y navbar.</p>
+          <div class="input-group">
+            <input id="nombre" placeholder="Nombre comercial">
+            <input id="razon" placeholder="Razón social">
+            <input id="cif" placeholder="CIF/NIF">
+            <input id="telefono" placeholder="Teléfono">
+            <input id="email" placeholder="Email de contacto" class="span-2">
+            <input id="direccion" placeholder="Dirección completa" class="span-2">
+          </div>
+          <hr>
+          <label>Logotipo Corporativo
+            <input type="file" id="logo" accept="image/*">
+          </label>
+          <img id="logo-preview" style="display:none; max-width:180px; border-radius: 10px; margin-top:10px;">
+        </article>
+      </section>
+
+      <section id="documentos" class="tab-section">
+        <article class="settings-card">
+          <h3>Configuración de Impresión</h3>
+          <p class="settings-main-subtitle">Elige qué datos de la empresa se imprimen en tickets y facturas, y personaliza el pie legal.</p>
+          <div class="input-group" style="background: #f9fafb; padding: 20px; border-radius: 10px;">
+            <label><input type="checkbox" id="doc-logo"> Logo</label>
+            <label><input type="checkbox" id="doc-direccion"> Dirección</label>
+            <label><input type="checkbox" id="doc-telefono"> Teléfono</label>
+            <label><input type="checkbox" id="doc-email"> Email</label>
+            <label><input type="checkbox" id="doc-web"> Web</label>
+            <label><input type="checkbox" id="doc-pago"> Modo Pago</label>
+          </div>
+          <br>
+          <textarea id="pie" rows="4" placeholder="Pie de página legal..."></textarea>
+        </article>
+      </section>
+
+      <section id="temas" class="tab-section">
+        <article class="settings-card">
+          <h3>Personalización del Sistema</h3>
+          <p class="settings-main-subtitle">Ajusta el color principal y el modo de pantalla de la aplicación.</p>
+          <label style="margin-top:6px;"><input type="checkbox" id="nav-mostrar-logo"> Mostrar logo en barra superior</label>
+          
+          <hr>
+          <h5>Perfil de Color</h5>
+          <div class="theme-preview">
+            <div class="theme-dot" style="background: #3b82f6;" onclick="setTheme('#3b82f6')"></div>
+            <div class="theme-dot" style="background: #10b981;" onclick="setTheme('#10b981')"></div>
+            <div class="theme-dot" style="background: #ef4444;" onclick="setTheme('#ef4444')"></div>
+            <div class="theme-dot" style="background: #8b5cf6;" onclick="setTheme('#8b5cf6')"></div>
+            <div class="theme-dot" style="background: #f59e0b;" onclick="setTheme('#f59e0b')"></div>
+          </div>
+          <br>
+          <label>O elige un color personalizado:
+            <input type="color" id="color" oninput="setTheme(this.value)">
+          </label>
+
+          <hr>
+          <h5>Modo de Pantalla</h5>
+          <select id="tema" onchange="cambiarModo(this.value)">
+            <option value="claro">☀️ Modo Claro</option>
+            <option value="oscuro">🌙 Modo Noche</option>
+          </select>
+        </article>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.settings-sidebar button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function setTheme(color) {
+    document.documentElement.style.setProperty('--accent', color);
+    const colorInput = document.getElementById('color');
+    if(colorInput) colorInput.value = color;
+  }
+
+  function cambiarModo(modo) {
+    if(modo === 'oscuro') {
+      document.documentElement.style.setProperty('--bg-app', '#1a202c');
+      document.documentElement.style.setProperty('--bg-card', '#2d3748');
+      document.documentElement.style.setProperty('--text-main', '#f7fafc');
+      document.documentElement.style.setProperty('--border-color', '#4a5568');
+    } else {
+      document.documentElement.style.setProperty('--bg-app', '#f4f7f9');
+      document.documentElement.style.setProperty('--bg-card', '#ffffff');
+      document.documentElement.style.setProperty('--text-main', '#2d3748');
+      document.documentElement.style.setProperty('--border-color', '#e2e8f0');
+    }
+  }
+</script>
+
+<script src="js/topbar.js" type="module"></script>
+<script type="module" src="js/config-panel-pro.js"></script>
+
+</body>
+</html>
