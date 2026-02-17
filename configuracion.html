@@ -42,72 +42,110 @@
 
       <section id="catalogo" class="tab-section">
         <article class="settings-card">
-          <p class="settings-main-subtitle">Define familias de productos y gestiona el catálogo que aparece en la Caja.</p>
-          <div class="grid">
-            
-            <div style="border-right: 1px solid var(--border-color); padding-right: 20px;">
-              <h4>📁 Familias</h4>
-              <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
-                <input type="hidden" id="cat-id-edit"> 
-                
-                <label>Nombre</label>
-                <input id="cat-nombre" placeholder="Ej: Fundas">
-                
-                <label>Fiscal</label>
-                <select id="cat-fiscal">
-                  <option value="IVA">Solo IVA (Servicios)</option>
-                  <option value="IVA_RE">IVA + RE (Venta)</option>
-                </select>
-
-                <label style="font-size: 0.75rem;">Imagen (opcional)
-                  <input type="file" id="cat-img" accept="image/*">
-                </label>
-
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
-                  <button id="btn-cat-guardar" class="outline" onclick="crearCategoria()" style="flex: 2; margin: 0; font-size: 0.8rem;">Crear/Guardar</button>
-                  <button id="btn-cat-cancelar" onclick="limpiarFormCat()" style="flex: 1; display: none; background: #ff4d4d; border: none; margin: 0;">✖</button>
-                </div>
-              </div>
-              <ul id="lista-categorias-config"></ul>
+          <p class="settings-main-subtitle">Gestiona familias, productos y stock desde un único panel dinámico.</p>
+          
+          <h4>📁 Familias</h4>
+          <div style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <input type="hidden" id="cat-id-edit"> 
+            <label>Nombre</label>
+            <input id="cat-nombre" placeholder="Ej: Fundas">
+            <label>Fiscal</label>
+            <select id="cat-fiscal">
+              <option value="IVA">Solo IVA (Servicios)</option>
+              <option value="IVA_RE">IVA + RE (Venta)</option>
+            </select>
+            <label style="font-size: 0.75rem;">Imagen (opcional)
+              <input type="file" id="cat-img" accept="image/*">
+            </label>
+            <div style="display: flex; gap: 5px; margin-top: 10px;">
+              <button id="btn-cat-guardar" class="outline" onclick="crearCategoria()" style="flex: 2; margin: 0; font-size: 0.8rem;">Crear/Guardar</button>
+              <button id="btn-cat-cancelar" onclick="limpiarFormCat()" style="flex: 1; display: none; background: #ff4d4d; border: none; margin: 0;">✖</button>
             </div>
+          </div>
+          <ul id="lista-categorias-config"></ul>
 
-            <div>
-              <h4>📦 Nuevo Producto</h4>
-              <div class="input-group">
-                <input id="prod-nombre" placeholder="Nombre del artículo" class="span-2">
-                
-                <select id="prod-cat-select" class="span-2">
+          <hr>
+          <h4>📦 Productos</h4>
+          <div style="display:flex; flex-direction:column; align-items:center; gap: 16px;">
+            <div style="min-width:140px; display:flex; flex-direction:column; align-items:center;">
+              <img id="prod-preview" src="" alt="" style="width:140px; height:140px; object-fit:cover; border:1px solid var(--border-color); border-radius:8px; display:none;">
+              <label style="margin-top:8px;">Cambiar imagen
+                <input type="file" id="prod-img" accept="image/*">
+              </label>
+              <div class="input-group" style="max-width:520px; width:100%; margin-top:12px;">
+                <input id="prod-nombre" placeholder="Título / Nombre del producto" class="span-2">
+                <select id="prod-cat-select">
                   <option value="">Selecciona Familia...</option>
                 </select>
-
-                <label>Precio Venta (PVP)
+                <input id="prod-marca" placeholder="Marca">
+                <input id="prod-modelo" placeholder="Modelo">
+                <input id="prod-color" placeholder="Color">
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input id="prod-barras" placeholder="Cód. Barras" style="flex:1;">
+                  <button class="outline" type="button" onclick="generarCodigoBarras()">Generar</button>
+                </div>
+                <input id="prod-ref" placeholder="Nº Referencia">
+                <input id="prod-almacen" placeholder="Ubicación / Almacenamiento">
+                <label>Precio de compra
+                  <input type="number" id="prod-compra" step="0.01" placeholder="0.00">
+                </label>
+                <label>Precio de venta
                   <input type="number" id="prod-venta" step="0.01" placeholder="0.00">
                 </label>
-
-                <label>Foto Producto
-                  <input type="file" id="prod-img" accept="image/*">
+                <select id="prod-proveedor">
+                  <option value="">Proveedor</option>
+                </select>
+                <label>Stock mínimo
+                  <input type="number" id="prod-stock-min" step="1" placeholder="0">
                 </label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="outline" type="button" onclick="ajustarUnidades(-1)">−</button>
+                  <input type="number" id="prod-unidades" step="1" value="0" style="width:100px; text-align:center;">
+                  <button class="outline" type="button" onclick="ajustarUnidades(1)">+</button>
+                </div>
+                <textarea id="prod-obs" rows="2" placeholder="Observaciones"></textarea>
               </div>
-              <button style="width: 100%; margin-top: 20px;" onclick="guardarProducto()">✨ Guardar Producto</button>
-
-              <hr>
-              <h5>Productos en Sistema</h5>
-              <div class="prod-table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>PVP</th>
-                      <th>Familia</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody id="tabla-productos-body">
-                    </tbody>
-                </table>
-              </div>
+              <button style="width: 100%; max-width:520px; margin-top: 12px;" onclick="guardarProducto()">💾 Guardar Producto</button>
             </div>
+          </div>
+          
+          <div class="prod-table-container" style="margin-top: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>PVP</th>
+                  <th>Stock</th>
+                  <th>Familia</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tabla-productos-body">
+                </tbody>
+            </table>
+          </div>
 
+          <hr>
+          <h4>📦 Inventario</h4>
+          <div class="input-group" style="gap:8px;">
+            <select id="inv-cat-filter">
+              <option value="">Todas las familias</option>
+            </select>
+          </div>
+          <div class="prod-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Unidades</th>
+                  <th>Stock mínimo</th>
+                  <th>Ubicación</th>
+                  <th>Ajustar</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-inventario-body">
+                </tbody>
+            </table>
           </div>
         </article>
       </section>
@@ -138,6 +176,8 @@
           <p class="settings-main-subtitle">Elige qué datos de la empresa se imprimen en tickets y facturas, y personaliza el pie legal.</p>
           <div class="input-group" style="background: #f9fafb; padding: 20px; border-radius: 10px;">
             <label><input type="checkbox" id="doc-logo"> Logo</label>
+            <label><input type="checkbox" id="doc-cif"> CIF</label>
+            <label><input type="checkbox" id="doc-razon"> Razón Social</label>
             <label><input type="checkbox" id="doc-direccion"> Dirección</label>
             <label><input type="checkbox" id="doc-telefono"> Teléfono</label>
             <label><input type="checkbox" id="doc-email"> Email</label>

@@ -55,11 +55,10 @@ async function cargarTicket() {
     const pvpUnitario = l.precio ?? 0;
     const pvpTotalFila = pvpUnitario * cantidad;
 
-    // Recalculamos el desglose según el tipo fiscal guardado en la línea
-    const divisor = (l.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+    const divisor = 1.21;
     const baseFila = pvpTotalFila / divisor;
     const ivaFila = baseFila * 0.21;
-    const reFila = (l.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
+    const reFila = 0;
 
     acumuladoSubtotal += baseFila;
     acumuladoIva += ivaFila;
@@ -67,7 +66,7 @@ async function cargarTicket() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${cantidad} x ${l.nombre}</td>
+      <td><div class="prod-name">${cantidad} x ${l.nombre}</div></td>
       <td class="right">${pvpTotalFila.toFixed(2)} €</td>
     `;
     tbody.appendChild(tr);
@@ -76,8 +75,7 @@ async function cargarTicket() {
   // Mostrar Totales Desglosados
   document.getElementById("subtotal").innerText = acumuladoSubtotal.toFixed(2) + " €";
   document.getElementById("iva").innerText = acumuladoIva.toFixed(2) + " €";
-  document.getElementById("recargo").innerText = acumuladoRecargo.toFixed(2) + " €";
-  document.getElementById("total").innerText = (v.total ?? (acumuladoSubtotal + acumuladoIva + acumuladoRecargo)).toFixed(2) + " €";
+  document.getElementById("total").innerText = (v.total ?? (acumuladoSubtotal + acumuladoIva)).toFixed(2) + " €";
 
   /* =========================
       BLOQUE PAGO/EFECTIVO
@@ -98,7 +96,10 @@ async function cargarTicket() {
   ========================= */
   setTimeout(() => {
     window.print();
-    window.onafterprint = () => window.close();
+    window.onafterprint = () => {
+      try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch(e){}
+      window.close();
+    };
   }, 700);
 }
 

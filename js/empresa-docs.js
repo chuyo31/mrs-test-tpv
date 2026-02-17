@@ -20,6 +20,8 @@ export async function cargarEmpresaDocs() {
   const e = snap.data();
   const datos = [];
 
+  if (e.doc_razon && e.razon) datos.push(e.razon);
+  if (e.doc_cif && e.cif) datos.push("CIF: " + e.cif);
   if (e.doc_direccion && e.direccion) datos.push(e.direccion);
   if (e.doc_telefono && e.telefono) datos.push("Tel: " + e.telefono);
   if (e.doc_email && e.email) datos.push(e.email);

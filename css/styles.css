@@ -1,8 +1,18 @@
+:root {
+  --bg-app: #020617;
+  --bg-card: #050816;
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+  --border-color: #111827;
+}
+
 /* Layout base de página: cuerpo y área principal */
 body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg-app);
+  color: var(--text-main);
 }
 
 main {
@@ -67,9 +77,9 @@ dialog article {
   grid-template-columns: 260px minmax(0, 1fr);
   gap: 0;
   margin-top: 24px;
-  background: #020617;
+  background: var(--bg-app);
   border-radius: 12px;
-  border: 1px solid #111827;
+  border: 1px solid var(--border-color);
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.7);
   overflow: hidden;
 }
@@ -79,22 +89,22 @@ dialog article {
    ============================ */
 .settings-sidebar {
   padding: 18px 12px;
-  border-right: 1px solid #111827;
-  background: #050816;
+  border-right: 1px solid var(--border-color);
+  background: var(--bg-card);
 }
 .settings-sidebar-title {
   margin: 0 0 12px 8px;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 .settings-sidebar button {
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 10px 12px;
   margin-bottom: 4px;
   display: flex;
@@ -106,8 +116,8 @@ dialog article {
 }
 .settings-sidebar button:hover,
 .settings-sidebar button.active {
-  background: #111827;
-  color: #e5e7eb;
+  background: var(--border-color);
+  color: var(--text-main);
 }
 .settings-sidebar-cta {
   margin-top: 16px;
@@ -132,11 +142,11 @@ dialog article {
 .settings-main-title {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #f9fafb;
+  color: var(--text-main);
 }
 .settings-main-subtitle {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 .settings-main-actions {
   display: flex;
@@ -151,10 +161,10 @@ dialog article {
    Configuración: Tarjetas
    ============================ */
 .settings-card {
-  background: #050816;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 1.4rem;
-  border: 1px solid #111827;
+  border: 1px solid var(--border-color);
   margin-bottom: 1rem;
 }
 
@@ -234,12 +244,12 @@ dialog article {
 .topbar {
   width: 100%;
   height: 50px;
-  background-color: #050816;
-  color: #a5bfff;
+  background-color: var(--bg-card);
+  color: var(--text-main);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 2px solid #111827;
+  border-bottom: 2px solid var(--border-color);
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.35);
   position: sticky;
   top: 0;
@@ -266,8 +276,8 @@ dialog article {
 }
 
 .topbar-icon:hover {
-  background-color: #10162b;
-  color: #e5e7eb;
+  background-color: var(--border-color);
+  color: var(--text-main);
 }
 
 /* Sección central: páginas del sistema como píldoras */
@@ -281,7 +291,7 @@ dialog article {
 }
 
 .topbar-link {
-  color: #a5bfff;
+  color: var(--text-main);
   text-decoration: none;
   font-weight: 500;
   padding: 4px 8px;
@@ -297,13 +307,13 @@ dialog article {
 }
 
 .topbar-link:hover {
-  background-color: #10162b;
-  color: #e5e7eb;
+  background-color: var(--border-color);
+  color: var(--text-main);
 }
 
 .topbar-link.active {
-  background-color: #0f172a;
-  color: #e5e7eb;
+  background-color: var(--border-color);
+  color: var(--text-main);
 }
 
 .topbar-link-icon {
@@ -323,13 +333,13 @@ dialog article {
 .topbar-divider {
   width: 1px;
   height: 22px;
-  background-color: #1e293b;
+  background-color: var(--border-color);
   margin: 0 6px 0 8px;
 }
 
 .topbar-user {
   font-size: 14px;
-  color: #e5e7eb;
+  color: var(--text-main);
 }
 
 .topbar-logo {

@@ -28,6 +28,8 @@ async function cargarListasCatalogo() {
     const listaCatUI = document.getElementById("lista-categorias-config");
     const selectCatUI = document.getElementById("prod-cat-select");
     const tablaBody = document.getElementById("tabla-productos-body");
+    const invFilter = document.getElementById("inv-cat-filter");
+    const invBody = document.getElementById("tabla-inventario-body");
 
     if (!listaCatUI || !selectCatUI) return;
 
@@ -59,6 +61,12 @@ async function cargarListasCatalogo() {
             option.value = cat.id;
             option.textContent = cat.nombre || 'Sin nombre';
             selectCatUI.appendChild(option);
+            if (invFilter) {
+                const opt2 = document.createElement("option");
+                opt2.value = cat.id;
+                opt2.textContent = cat.nombre || 'Sin nombre';
+                invFilter.appendChild(opt2);
+            }
         });
 
         // Cargar Productos (products)
@@ -79,11 +87,15 @@ async function cargarListasCatalogo() {
                 tr.innerHTML = `
                     <td onclick="prepararEdicionProducto('${p.id}')"><strong>${p.nombre || 'S/N'}</strong></td>
                     <td onclick="prepararEdicionProducto('${p.id}')">${p.pvp || 0}€</td>
+                    <td onclick="prepararEdicionProducto('${p.id}')">${p.unidades ?? 0}</td>
                     <td onclick="prepararEdicionProducto('${p.id}')"><small>${nombreFamilia}</small></td>
                     <td><button class="outline error" onclick="eliminarProducto('${p.id}')" style="padding: 4px; margin:0; width:auto;">🗑️</button></td>
                 `;
                 tablaBody.appendChild(tr);
             });
+        }
+        if (invBody) {
+            renderInventario();
         }
     } catch (error) { console.error("Error:", error); }
 }
@@ -164,6 +176,19 @@ window.prepararEdicionProducto = function(id) {
     document.getElementById("prod-nombre").value = p.nombre || "";
     document.getElementById("prod-venta").value = p.pvp || "";
     document.getElementById("prod-cat-select").value = p.categoria_id || "";
+    if (document.getElementById("prod-marca")) document.getElementById("prod-marca").value = p.marca || "";
+    if (document.getElementById("prod-modelo")) document.getElementById("prod-modelo").value = p.modelo || "";
+    if (document.getElementById("prod-color")) document.getElementById("prod-color").value = p.color || "";
+    if (document.getElementById("prod-barras")) document.getElementById("prod-barras").value = p.codigo_barras || "";
+    if (document.getElementById("prod-ref")) document.getElementById("prod-ref").value = p.referencia || "";
+    if (document.getElementById("prod-almacen")) document.getElementById("prod-almacen").value = p.almacen || "";
+    if (document.getElementById("prod-compra")) document.getElementById("prod-compra").value = p.precio_compra || "";
+    if (document.getElementById("prod-proveedor")) document.getElementById("prod-proveedor").value = p.proveedor || "";
+    if (document.getElementById("prod-stock-min")) document.getElementById("prod-stock-min").value = p.stock_minimo || 0;
+    if (document.getElementById("prod-unidades")) document.getElementById("prod-unidades").value = p.unidades ?? 0;
+    if (document.getElementById("prod-obs")) document.getElementById("prod-obs").value = p.observaciones || "";
+    const prev = document.getElementById("prod-preview");
+    if (prev && p.imagen_url) { prev.src = p.imagen_url; prev.style.display = "block"; }
     
     // Desplazar al formulario para que el usuario vea que está editando
     document.getElementById("prod-nombre").focus();
@@ -184,12 +209,21 @@ window.guardarProducto = async function() {
     const pvp = parseFloat(document.getElementById("prod-venta").value);
     const catId = document.getElementById("prod-cat-select").value;
     const fileInput = document.getElementById("prod-img");
+    const marca = document.getElementById("prod-marca")?.value.trim() || "";
+    const modelo = document.getElementById("prod-modelo")?.value.trim() || "";
+    const color = document.getElementById("prod-color")?.value.trim() || "";
+    const codigo_barras = document.getElementById("prod-barras")?.value.trim() || "";
+    const referencia = document.getElementById("prod-ref")?.value.trim() || "";
+    const almacen = document.getElementById("prod-almacen")?.value.trim() || "";
+    const precio_compra = parseFloat(document.getElementById("prod-compra")?.value) || 0;
+    const proveedor = document.getElementById("prod-proveedor")?.value.trim() || "";
+    const stock_minimo = parseInt(document.getElementById("prod-stock-min")?.value) || 0;
+    const unidades = parseInt(document.getElementById("prod-unidades")?.value) || 0;
+    const observaciones = document.getElementById("prod-obs")?.value.trim() || "";
 
     if (!nombre || isNaN(pvp) || !catId) return alert("Faltan datos");
 
-    const familia = categoriasLocal.find(c => c.id === catId);
-    const tieneRE = familia?.tipoFiscal === "IVA_RE";
-    const divisor = tieneRE ? 1.262 : 1.21;
+    const divisor = 1.21;
     const base = pvp / divisor;
 
     try {
@@ -204,8 +238,11 @@ window.guardarProducto = async function() {
             nombre, pvp, categoria_id: catId,
             base_imponible: Number(base.toFixed(4)),
             cuota_iva: Number((base * 0.21).toFixed(4)),
-            cuota_re: tieneRE ? Number((base * 0.052).toFixed(4)) : 0,
-            updated_at: new Date()
+            updated_at: new Date(),
+            marca, modelo, color,
+            codigo_barras, referencia, almacen,
+            precio_compra, proveedor, stock_minimo, unidades,
+            observaciones
         };
 
         if (imgUrl) data.imagen_url = imgUrl;
@@ -225,6 +262,19 @@ window.guardarProducto = async function() {
         document.getElementById("prod-nombre").value = "";
         document.getElementById("prod-venta").value = "";
         document.getElementById("prod-img").value = "";
+        if (document.getElementById("prod-marca")) document.getElementById("prod-marca").value = "";
+        if (document.getElementById("prod-modelo")) document.getElementById("prod-modelo").value = "";
+        if (document.getElementById("prod-color")) document.getElementById("prod-color").value = "";
+        if (document.getElementById("prod-barras")) document.getElementById("prod-barras").value = "";
+        if (document.getElementById("prod-ref")) document.getElementById("prod-ref").value = "";
+        if (document.getElementById("prod-almacen")) document.getElementById("prod-almacen").value = "";
+        if (document.getElementById("prod-compra")) document.getElementById("prod-compra").value = "";
+        if (document.getElementById("prod-proveedor")) document.getElementById("prod-proveedor").value = "";
+        if (document.getElementById("prod-stock-min")) document.getElementById("prod-stock-min").value = "0";
+        if (document.getElementById("prod-unidades")) document.getElementById("prod-unidades").value = "0";
+        if (document.getElementById("prod-obs")) document.getElementById("prod-obs").value = "";
+        const prev = document.getElementById("prod-preview");
+        if (prev) { prev.src = ""; prev.style.display = "none"; }
         
         cargarListasCatalogo();
     } catch (e) { alert("Error al guardar producto"); }
@@ -246,6 +296,8 @@ async function cargarPanelPro() {
   document.getElementById("email").value = d.email || "";
   document.getElementById("pie").value = d.pie || "";
   document.getElementById("doc-logo").checked = d.doc_logo ?? true;
+  if (document.getElementById("doc-cif")) document.getElementById("doc-cif").checked = d.doc_cif ?? true;
+  if (document.getElementById("doc-razon")) document.getElementById("doc-razon").checked = d.doc_razon ?? true;
   document.getElementById("doc-direccion").checked = d.doc_direccion ?? true;
   document.getElementById("doc-telefono").checked = d.doc_telefono ?? true;
   document.getElementById("doc-email").checked = d.doc_email ?? false;
@@ -285,6 +337,8 @@ window.guardarPanelPro = async function () {
       email: document.getElementById("email").value.trim(),
       pie: document.getElementById("pie").value.trim(),
       doc_logo: document.getElementById("doc-logo").checked,
+      doc_cif: document.getElementById("doc-cif")?.checked ?? true,
+      doc_razon: document.getElementById("doc-razon")?.checked ?? true,
       doc_direccion: document.getElementById("doc-direccion").checked,
       doc_telefono: document.getElementById("doc-telefono").checked,
       doc_email: document.getElementById("doc-email").checked,
@@ -305,3 +359,51 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarPanelPro();
     cargarListasCatalogo();
 });
+window.generarCodigoBarras = function() {
+    const inpt = document.getElementById("prod-barras");
+    const v = "PPP" + new Date().getFullYear() + Math.floor(Math.random()*1e12).toString().padStart(12, '0');
+    inpt.value = v;
+};
+window.ajustarUnidades = function(delta) {
+    const inpt = document.getElementById("prod-unidades");
+    const v = (parseInt(inpt.value || "0") + delta);
+    inpt.value = Math.max(0, v);
+};
+
+function renderInventario() {
+    const tbody = document.getElementById("tabla-inventario-body");
+    const invFilter = document.getElementById("inv-cat-filter");
+    if (!tbody) return;
+    const catId = invFilter?.value || "";
+    tbody.innerHTML = "";
+    const items = productosLocal.filter(p => !catId || p.categoria_id === catId);
+    items.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>${p.nombre || 'S/N'}</strong></td>
+            <td><span id="inv-u-${p.id}">${p.unidades ?? 0}</span></td>
+            <td>${p.stock_minimo ?? 0}</td>
+            <td>${p.almacen || '-'}</td>
+            <td>
+                <button class="outline" onclick="invAjustar('${p.id}', -1)">−</button>
+                <button class="outline" onclick="invAjustar('${p.id}', 1)">+</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    if (invFilter && !invFilter.dataset.bound) {
+        invFilter.addEventListener("change", renderInventario);
+        invFilter.dataset.bound = "1";
+    }
+}
+
+window.invAjustar = async function(id, delta) {
+    try {
+        const p = productosLocal.find(x => x.id === id);
+        const el = document.getElementById(`inv-u-${id}`);
+        const nv = Math.max(0, (p.unidades ?? 0) + delta);
+        el.textContent = nv;
+        p.unidades = nv;
+        await setDoc(doc(db, "products", id), { unidades: nv, updated_at: new Date() }, { merge: true });
+    } catch(e) { alert("Error ajustando inventario"); }
+};
