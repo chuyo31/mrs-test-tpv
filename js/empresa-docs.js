@@ -13,7 +13,10 @@ export async function cargarEmpresaDocs() {
       datosHtml: "",
       pie: "",
       logo: null,
-      mostrarLogo: false
+      mostrarLogo: false,
+      tema: "claro",
+      color: "#3b82f6",
+      mostrarLogoNavbar: false
     };
   }
 
@@ -33,6 +36,8 @@ export async function cargarEmpresaDocs() {
     pie: e.pie || "",
     logo: e.logo_url || null,
     mostrarLogo: e.doc_logo === true,
-    mostrarLogoNavbar: e.nav_mostrar_logo === true // 👈 ESTA LÍNEA ES VITAL
+    mostrarLogoNavbar: e.nav_mostrar_logo === true,
+    tema: e.tema || "claro",
+    color: e.color_corporativo || "#3b82f6"
   };
 }

@@ -9,6 +9,27 @@ async function injectTopbar() {
   const empresa = await cargarEmpresaDocs();
   const company = empresa.nombre || sessionStorage.getItem("empresaNombre") || "MovilRING";
 
+  // Aplicar tema global y color corporativo
+  if (!window.cambiarModo) {
+    window.cambiarModo = function(modo) {
+      if (modo === "oscuro") {
+        document.documentElement.style.setProperty('--bg-app', '#1a202c');
+        document.documentElement.style.setProperty('--bg-card', '#2d3748');
+        document.documentElement.style.setProperty('--text-main', '#f7fafc');
+        document.documentElement.style.setProperty('--text-muted', '#9ca3af');
+        document.documentElement.style.setProperty('--border-color', '#4a5568');
+      } else {
+        document.documentElement.style.setProperty('--bg-app', '#f4f7f9');
+        document.documentElement.style.setProperty('--bg-card', '#ffffff');
+        document.documentElement.style.setProperty('--text-main', '#2d3748');
+        document.documentElement.style.setProperty('--text-muted', '#64748b');
+        document.documentElement.style.setProperty('--border-color', '#e2e8f0');
+      }
+    };
+  }
+  if (empresa.color) document.documentElement.style.setProperty('--accent', empresa.color);
+  window.cambiarModo(empresa.tema || "claro");
+
   const pages = [
     { href: "caja.html", icon: "🛒", label: "Caja" },
     { href: "historial.html", icon: "📜", label: "Historial" },

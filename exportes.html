@@ -34,26 +34,49 @@
     </label>
   </div>
 
-  <button onclick="calcularResumen()">
-    📊 Calcular resumen
-  </button>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+    <button onclick="calcularResumen()">📊 Calcular resumen</button>
+    <button onclick="exportarPDFBasico()">⬇ Exportar PDF Básico</button>
+    <button onclick="exportarPDF()">⬇ Exportar PDF Avanzado</button>
+  </div>
 
   <hr>
 
   <article id="resultado" style="display:none;">
-    <h4>Resumen fiscal</h4>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+      <button class="secondary" onclick="enviarWhatsApp()">Enviar por WhatsApp</button>
+      <button class="secondary" onclick="enviarEmail()">Enviar por Email</button>
+    </div>
 
-    <ul>
-      <li>Total ventas: <strong id="res-total"></strong></li>
-      <li>Base IVA (reparaciones): <strong id="res-base-iva"></strong></li>
-      <li>IVA repercutido: <strong id="res-iva"></strong></li>
-      <li>Base recargo (ventas): <strong id="res-base-re"></strong></li>
-      <li>Recargo equivalencia: <strong id="res-recargo"></strong></li>
-    </ul>
+    <details id="resumen-detalles">
+      <summary>Resumen fiscal</summary>
 
-    <button onclick="exportarCSV()">
-      ⬇ Exportar CSV
-    </button>
+      <ul style="margin-top:10px;">
+        <li>Total ventas: <strong id="res-total"></strong></li>
+        <li>Base IVA: <strong id="res-base-iva"></strong></li>
+        <li>IVA repercutido: <strong id="res-iva"></strong></li>
+      </ul>
+
+      <div class="prod-table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Documento</th>
+              <th>Total</th>
+              <th>Base</th>
+              <th>IVA</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-exportes"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+        <button onclick="exportarCSV()">⬇ Descargar CSV</button>
+        <button onclick="exportarExcel()">⬇ Descargar Excel</button>
+      </div>
+    </details>
   </article>
 
 </main>
