@@ -64,9 +64,10 @@ async function cargarCategoriasCaja() {
     const cat = { id: docSnap.id, ...docSnap.data() };
     categoriasLocal.push(cat);
     const btn = document.createElement("button");
-    btn.innerText = cat.nombre;
-    btn.className = "secondary";
-    btn.style = "margin: 5px; min-width: 120px;";
+    btn.className = "secondary cat-btn";
+    btn.style = "margin: 5px; min-width: 140px; display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px;";
+    const imgHtml = cat.imagen_url ? `<img src="${cat.imagen_url}" alt="${cat.nombre}" style="width:80px; height:80px; object-fit:cover; border-radius:8px;">` : `<div style="width:80px; height:80px; border-radius:8px; background:#e5e7eb; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:1.2rem; color:#374151;">${(cat.nombre||'?').slice(0,1).toUpperCase()}</div>`;
+    btn.innerHTML = `${imgHtml}<span style="font-weight:600; color:#111827;">${cat.nombre}</span>`;
     btn.onclick = () => cargarProductosCaja(docSnap.id);
     divCat.appendChild(btn);
   });
@@ -128,18 +129,16 @@ function renderizarTabla() {
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  let subtotalGeneral = 0, totalIva = 0, totalRec = 0;
+  let subtotalGeneral = 0, totalIva = 0;
 
   ventaActual.forEach(i => {
     const pvpTotalFila = i.precio * i.cantidad;
-    const divisor = (i.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+    const divisor = 1.21;
     const baseFila = pvpTotalFila / divisor;
     const ivaFila = baseFila * 0.21;
-    const reFila = (i.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
 
     subtotalGeneral += baseFila;
     totalIva += ivaFila;
-    totalRec += reFila;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -160,10 +159,9 @@ function renderizarTabla() {
     tbody.appendChild(tr);
   });
 
-  const totalFinal = subtotalGeneral + totalIva + totalRec;
+  const totalFinal = subtotalGeneral + totalIva;
   document.getElementById("subtotal").innerText = subtotalGeneral.toFixed(2) + " €";
   document.getElementById("total-iva").innerText = totalIva.toFixed(2) + " €";
-  document.getElementById("total-recargo").innerText = totalRec.toFixed(2) + " €";
   document.getElementById("total-venta").innerText = totalFinal.toFixed(2) + " €";
   
   if (metodoPago === 'efectivo') calcularCambio();
@@ -236,7 +234,6 @@ window.guardarVenta = async () => {
       lineas: ventaActual,
       subtotal: parseFloat(document.getElementById("subtotal").innerText),
       total_iva: parseFloat(document.getElementById("total-iva").innerText),
-      total_recargo: parseFloat(document.getElementById("total-recargo").innerText),
       total: totalVenta,
       metodo_pago: metodoPago,
       caja_id: cajaActualId, // Vínculo para el Cierre Z

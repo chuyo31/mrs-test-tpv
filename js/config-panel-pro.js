@@ -104,7 +104,7 @@ window.prepararEdicionCategoria = function(id) {
     if (!cat) return;
     document.getElementById("cat-id-edit").value = cat.id;
     document.getElementById("cat-nombre").value = cat.nombre;
-    document.getElementById("cat-fiscal").value = cat.tipoFiscal;
+    document.getElementById("cat-fiscal").value = cat.tipoFiscal || "IVA";
     document.getElementById("btn-cat-guardar").innerText = "💾 Actualizar Familia";
     document.getElementById("btn-cat-cancelar").style.display = "block";
 };
@@ -112,7 +112,7 @@ window.prepararEdicionCategoria = function(id) {
 window.crearCategoria = async function() {
     const id = document.getElementById("cat-id-edit").value;
     const nombre = document.getElementById("cat-nombre").value.trim();
-    const tipoFiscal = document.getElementById("cat-fiscal").value;
+    const tipoFiscal = "IVA";
     const fileInput = document.getElementById("cat-img");
 
     if (!nombre) return alert("Nombre obligatorio");
@@ -188,8 +188,7 @@ window.guardarProducto = async function() {
     if (!nombre || isNaN(pvp) || !catId) return alert("Faltan datos");
 
     const familia = categoriasLocal.find(c => c.id === catId);
-    const tieneRE = familia?.tipoFiscal === "IVA_RE";
-    const divisor = tieneRE ? 1.262 : 1.21;
+    const divisor = 1.21;
     const base = pvp / divisor;
 
     try {
@@ -204,7 +203,6 @@ window.guardarProducto = async function() {
             nombre, pvp, categoria_id: catId,
             base_imponible: Number(base.toFixed(4)),
             cuota_iva: Number((base * 0.21).toFixed(4)),
-            cuota_re: tieneRE ? Number((base * 0.052).toFixed(4)) : 0,
             updated_at: new Date()
         };
 

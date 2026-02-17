@@ -46,8 +46,6 @@ window.calcularResumen = async function () {
   let totalVentas = 0;
   let baseIVA = 0;
   let totalIVA = 0;
-  let baseRE = 0;
-  let totalRE = 0;
 
   ventasFiltradas = [];
 
@@ -55,22 +53,13 @@ window.calcularResumen = async function () {
     const v = d.data();
     totalVentas += v.total;
     totalIVA += v.total_iva;
-    totalRE += v.total_recargo;
-
-    v.lineas.forEach(l => {
-      if (l.recargo > 0) {
-        baseRE += l.base;
-      } else {
-        baseIVA += l.base;
-      }
-    });
+    baseIVA += v.subtotal || 0;
 
     ventasFiltradas.push({
       fecha: v.fecha.toDate().toLocaleDateString(),
       ticket: v.ticket_numero,
       total: v.total.toFixed(2),
-      iva: v.total_iva.toFixed(2),
-      recargo: v.total_recargo.toFixed(2)
+      iva: v.total_iva.toFixed(2)
     });
   });
 
@@ -80,10 +69,6 @@ window.calcularResumen = async function () {
     baseIVA.toFixed(2) + " €";
   document.getElementById("res-iva").innerText =
     totalIVA.toFixed(2) + " €";
-  document.getElementById("res-base-re").innerText =
-    baseRE.toFixed(2) + " €";
-  document.getElementById("res-recargo").innerText =
-    totalRE.toFixed(2) + " €";
 
   document.getElementById("resultado").style.display = "block";
 };
@@ -98,10 +83,10 @@ window.exportarCSV = function () {
     return;
   }
 
-  let csv = "Fecha;Ticket;Total;IVA;Recargo\n";
+  let csv = "Fecha;Ticket;Total;IVA\n";
 
   ventasFiltradas.forEach(v => {
-    csv += `${v.fecha};${v.ticket};${v.total};${v.iva};${v.recargo}\n`;
+    csv += `${v.fecha};${v.ticket};${v.total};${v.iva}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

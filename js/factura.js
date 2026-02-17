@@ -71,7 +71,6 @@ async function cargarFactura() {
 
     let acumuladoSubtotal = 0;
     let acumuladoIva = 0;
-    let acumuladoRecargo = 0;
 
     const lineas = f.lineas || [];
 
@@ -80,15 +79,12 @@ async function cargarFactura() {
         const pvpUnitario = l.precio ?? 0;
         const pvpTotalFila = pvpUnitario * cantidad;
 
-        // Cálculo de impuestos por línea (Regla de Oro Fiscal)
-        const divisor = (l.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+        const divisor = 1.21;
         const baseFila = pvpTotalFila / divisor;
         const ivaFila = baseFila * 0.21;
-        const reFila = (l.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
 
         acumuladoSubtotal += baseFila;
         acumuladoIva += ivaFila;
-        acumuladoRecargo += reFila;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -101,11 +97,10 @@ async function cargarFactura() {
     });
 
     // Totales finales
-    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva + acumuladoRecargo);
+    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva);
     
     document.getElementById("subtotal").innerText = acumuladoSubtotal.toFixed(2) + " €";
     document.getElementById("iva").innerText = acumuladoIva.toFixed(2) + " €";
-    document.getElementById("recargo").innerText = acumuladoRecargo.toFixed(2) + " €";
     document.getElementById("total").innerText = totalFinal.toFixed(2) + " €";
 
     /* =========================
@@ -113,7 +108,14 @@ async function cargarFactura() {
     ========================= */
     setTimeout(() => {
         window.print();
-        // window.onafterprint = () => window.close();
+        window.onafterprint = () => {
+            try {
+                if (window.opener && !window.opener.closed) {
+                    window.opener.focus();
+                }
+            } catch (e) {}
+            window.close();
+        };
     }, 1000);
 }
 

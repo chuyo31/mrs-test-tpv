@@ -11,17 +11,29 @@
   <title>Ticket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: 'Courier New', Courier, monospace; width: 80mm; margin: auto; font-size: 12px; color: #000; }
+    body { font-family: 'Segoe UI', Verdana, Arial, sans-serif; width: 80mm; margin: auto; font-size: 11px; color: #000; background: #fff; padding: 0 3mm; }
     hr { border: 0; border-top: 1px dashed #000; margin: 10px 0; }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th { font-weight: 800; font-size: 12px; color: #000; }
+    td, th { padding: 2px 0; }
+    #lineas td, #lineas th { font-size: 10px; }
+    table, th, td { color: #000; }
+    .prod-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
     .right { text-align: right; }
     .center { text-align: center; }
-    .total { font-weight: bold; font-size: 14px; }
+    .total { font-weight: bold; font-size: 14px; border-top: 1px solid #000; }
+    thead tr { border-bottom: 1px solid #000; }
     img { max-width: 120px; margin-bottom: 10px; filter: grayscale(1); }
-    .desglose td { font-size: 11px; padding-top: 2px; }
+    .desglose td { font-size: 11px; padding-top: 2px; color: #000; }
+    #lineas td:first-child { word-break: break-word; hyphens: auto; }
+    #lineas td:nth-child(2),
+    #lineas td:nth-child(3) { white-space: nowrap; }
+    #bloque-pago, #pie-legal { color: #000; }
+    @page { size: 80mm auto; margin: 0; }
     @media print {
-        body { width: 100%; margin: 0; }
-        @page { margin: 0; }
+        :root { color-scheme: light; }
+        body { width: calc(80mm - 6mm); margin: 0; background: #fff !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0 3mm; }
+        img { filter: grayscale(1) contrast(1); }
     }
   </style>
 </head>
@@ -44,6 +56,10 @@
   <hr>
 
   <table>
+    <colgroup>
+      <col style="width: 72%;">
+      <col style="width: 28%;">
+    </colgroup>
     <tbody id="lineas"></tbody>
   </table>
 
@@ -57,10 +73,6 @@
     <tr>
       <td>IVA (21%)</td>
       <td class="right" id="iva">0.00 €</td>
-    </tr>
-    <tr>
-      <td>Recargo RE</td>
-      <td class="right" id="recargo">0.00 €</td>
     </tr>
     <tr class="total">
       <td style="padding-top: 8px;">TOTAL</td>
