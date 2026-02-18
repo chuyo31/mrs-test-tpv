@@ -1,14 +1,21 @@
-import { db } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 import {
   collection, getDocs, getDoc, addDoc, updateDoc, doc,
   serverTimestamp, query, where, limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { generarNumeroLegal } from "./numeracion.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+const storage = getStorage();
 
 let ventaActual = [];
 let metodoPago = null;
 let cajaActualId = null;
 let categoriasLocal = [];
+let ultimoDocId = null;
+let ultimoDocData = null;
+let usuarioActualNombre = "—";
 
 /* =========================
    ESTADO DE CAJA
@@ -64,7 +71,7 @@ async function cargarCategoriasCaja() {
     const cat = { id: docSnap.id, ...docSnap.data() };
     categoriasLocal.push(cat);
     const btn = document.createElement("button");
-    btn.innerText = cat.nombre;
+    btn.innerHTML = (cat.imagen_url ? `<img src="${cat.imagen_url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;display:block;margin:0 auto 6px;">` : ``) + `<div>${cat.nombre}</div>`;
     btn.className = "secondary";
     btn.style = "margin: 5px; min-width: 120px;";
     btn.onclick = () => cargarProductosCaja(docSnap.id);
@@ -85,8 +92,9 @@ async function cargarProductosCaja(catId) {
     const id = docSnap.id;
     const btn = document.createElement("button");
     btn.className = "outline";
-    btn.style = "margin: 5px; height: auto; padding: 10px;";
-    btn.innerHTML = `${p.nombre}<br><strong>${parseFloat(p.pvp).toFixed(2)}€</strong>`;
+    btn.style = "margin: 5px; height: auto; padding: 10px; text-align:center;";
+    const img = p.imagen_url ? `<img src="${p.imagen_url}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;display:block;margin:0 auto 6px;">` : "";
+    btn.innerHTML = `${img}<div>${p.nombre}</div><div><strong>${parseFloat(p.pvp || 0).toFixed(2)}€</strong></div>`;
     btn.onclick = () => agregarProductoVenta(id, p);
     divProd.appendChild(btn);
   });
@@ -202,6 +210,77 @@ window.calcularCambio = () => {
   document.getElementById("cambio").innerText = (cambio > 0 ? cambio : 0).toFixed(2) + " €";
 };
 
+window.addEventListener("DOMContentLoaded", () => {
+  cargarUsuarioActual();
+  const input = document.getElementById("buscar-producto");
+  if (!input) return;
+  input.addEventListener("input", async () => {
+    const term = input.value.trim().toLowerCase();
+    const cont = document.getElementById("productos");
+    if (!cont) return;
+    if (!term) { cont.innerHTML = ""; return; }
+    const snap = await getDocs(collection(db, "products"));
+    const matched = [];
+    snap.forEach(d => {
+      const p = d.data();
+      if ((p.nombre || "").toLowerCase().includes(term)) {
+        matched.push({ id: d.id, ...p });
+      }
+    });
+    cont.innerHTML = "";
+    matched.forEach(p => {
+      const btn = document.createElement("button");
+      btn.className = "outline";
+      btn.style = "margin: 5px; height: auto; padding: 10px; text-align:center;";
+      const img = p.imagen_url ? `<img src="${p.imagen_url}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;display:block;margin:0 auto 6px;">` : "";
+      btn.innerHTML = `${img}<div>${p.nombre}</div><div><strong>${parseFloat(p.pvp || 0).toFixed(2)}€</strong></div>`;
+      btn.onclick = () => agregarProductoVenta(p.id, p);
+      cont.appendChild(btn);
+    });
+  });
+});
+
+async function cargarUsuarioActual() {
+  try {
+    const uid = sessionStorage.getItem("uid");
+    if (!uid) { document.getElementById("usuario-actual-nombre").innerText = "—"; return; }
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      usuarioActualNombre = d.nombre || d.alias || (d.email?.split("@")[0]) || "Usuario";
+    } else {
+      usuarioActualNombre = "Usuario";
+    }
+  } catch(e) {
+    usuarioActualNombre = "Usuario";
+  }
+  const el = document.getElementById("usuario-actual-nombre");
+  if (el) el.innerText = usuarioActualNombre;
+}
+
+window.cambiarUsuario = () => {
+  if (typeof window.logout === "function") window.logout();
+};
+
+window.aplicarDescuento = () => {
+  if (!ventaActual.length) { alert("No hay líneas en la venta"); return; }
+  const totalPvp = ventaActual.reduce((a,b)=>a + (b.precio || 0) * (b.cantidad || 1), 0);
+  const entrada = prompt("Introduce % de descuento (0-100)", "10");
+  if (entrada === null) return;
+  const pct = parseFloat(entrada);
+  if (isNaN(pct) || pct <= 0 || pct >= 100) { alert("Porcentaje inválido"); return; }
+  const importe = totalPvp * (pct / 100);
+  ventaActual.push({
+    id: "desc_" + Date.now(),
+    nombre: `Descuento (${pct.toFixed(0)}%)`,
+    precio: -importe,
+    cantidad: 1,
+    tipoFiscal: "IVA",
+    categoria_id: null
+  });
+  renderizarTabla();
+};
+
 /* =========================
    GUARDAR VENTA (FINAL)
 ========================= */
@@ -243,6 +322,16 @@ window.guardarVenta = async () => {
       efectivo_entregado: entregado
     });
 
+    ultimoDocId = docRef.id;
+    ultimoDocData = {
+      numero_legal: num,
+      lineas: JSON.parse(JSON.stringify(ventaActual)),
+      subtotal: parseFloat(document.getElementById("subtotal").innerText),
+      total_iva: parseFloat(document.getElementById("total-iva").innerText),
+      total: totalVenta,
+      metodo_pago: metodoPago
+    };
+
     // 4. Resetear interfaz
     alert("Venta guardada: " + num);
     ventaActual = [];
@@ -252,12 +341,88 @@ window.guardarVenta = async () => {
     document.getElementById("efectivo-entregado").value = "";
     renderizarTabla();
     
-    // 5. Imprimir
-    window.open(`ticket.html?id=${docRef.id}`, "_blank");
+    // 5. Popup post-cobro
+    const dlg = document.getElementById("post-cobro");
+    const desc = document.getElementById("post-desc");
+    const lineas = ultimoDocData.lineas.reduce((a,b)=>a + (b.cantidad || 1), 0);
+    desc.innerText = `Venta ${num} · ${lineas} unidades · Total ${ultimoDocData.total.toFixed(2)} € (Base ${ultimoDocData.subtotal.toFixed(2)} €, IVA ${ultimoDocData.total_iva.toFixed(2)} €)`;
+    if (dlg?.showModal) dlg.showModal();
 
   } catch (err) {
     console.error("Error al guardar venta:", err);
     alert("Hubo un error al guardar la venta.");
+  }
+};
+
+window.postCerrar = () => {
+  const dlg = document.getElementById("post-cobro");
+  if (dlg?.close) dlg.close();
+};
+
+window.postImprimirTicket = () => {
+  if (!ultimoDocId) return;
+  window.open(`ticket.html?id=${ultimoDocId}`, "_blank");
+};
+
+window.postImprimirFactura = () => {
+  if (!ultimoDocId) return;
+  window.open(`factura.html?id=${ultimoDocId}`, "_blank");
+};
+
+function crearNodoDoc(tipo = "ticket") {
+  const d = ultimoDocData;
+  const el = document.createElement("div");
+  el.style.padding = "16px";
+  el.style.fontFamily = "Arial, Helvetica, sans-serif";
+  el.innerHTML = `
+    <h3 style="margin:0 0 6px 0;">${tipo.toUpperCase()} ${d.numero_legal || ""}</h3>
+    <p style="margin:0 0 8px 0;">Método: ${d.metodo_pago?.toUpperCase() || ""}</p>
+    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead><tr>
+        <th style="border:1px solid #000; padding:4px; text-align:left;">Producto</th>
+        <th style="border:1px solid #000; padding:4px;">Cant.</th>
+        <th style="border:1px solid #000; padding:4px; text-align:right;">Total</th>
+      </tr></thead>
+      <tbody>
+        ${d.lineas.map(l => {
+          const total = (l.precio || 0) * (l.cantidad || 1);
+          return `<tr>
+            <td style="border:1px solid #000; padding:4px;">${l.nombre}</td>
+            <td style="border:1px solid #000; padding:4px; text-align:center;">${l.cantidad || 1}</td>
+            <td style="border:1px solid #000; padding:4px; text-align:right;">${total.toFixed(2)} €</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+      <tfoot>
+        <tr><th colspan="2" style="border:1px solid #000; padding:4px; text-align:right;">Base</th><th style="border:1px solid #000; padding:4px; text-align:right;">${d.subtotal.toFixed(2)} €</th></tr>
+        <tr><th colspan="2" style="border:1px solid #000; padding:4px; text-align:right;">IVA</th><th style="border:1px solid #000; padding:4px; text-align:right;">${d.total_iva.toFixed(2)} €</th></tr>
+        <tr><th colspan="2" style="border:1px solid #000; padding:4px; text-align:right;">Total</th><th style="border:1px solid #000; padding:4px; text-align:right;">${d.total.toFixed(2)} €</th></tr>
+      </tfoot>
+    </table>
+  `;
+  return el;
+}
+
+window.postEnviarWhatsApp = async () => {
+  try {
+    if (!ultimoDocData) return alert("No hay venta reciente");
+    const phone = (document.getElementById("post-phone")?.value || "").trim();
+    const tipo = document.getElementById("post-doc-type")?.value || "ticket";
+    if (!phone) return alert("Introduce el número del cliente");
+    const node = crearNodoDoc(tipo);
+    document.body.appendChild(node);
+    const opt = { filename: `${tipo}_${ultimoDocData.numero_legal || "ticket"}.pdf`, margin: 10, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    const blob = await window.html2pdf().set(opt).from(node).outputPdf('blob');
+    node.remove();
+    const storageRef = ref(storage, `docs/${opt.filename}`);
+    await uploadBytes(storageRef, blob);
+    const link = await getDownloadURL(storageRef);
+    const text = `Documento ${tipo.toUpperCase()} ${ultimoDocData.numero_legal || ""}\\n${link}`;
+    const url = `https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  } catch (e) {
+    console.error(e);
+    alert("No se pudo generar/enviar el PDF.");
   }
 };
 

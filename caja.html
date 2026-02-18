@@ -68,21 +68,36 @@
 
 <div id="zona-caja" style="display:none; margin-top: 1rem;">
   <main class="container-fluid" style="padding: 0 20px;">
-    <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
-      <span style="font-size:0.9rem; color:#6b7280;">Tamaño panel</span>
-      <input type="range" id="panelSplit" min="35" max="75" value="63" style="flex:1;">
-      <span id="panelSplitVal" style="font-size:0.9rem; color:#6b7280;">63%</span>
+    <div style="display:flex; justify-content:flex-start; align-items:center; gap:10px; margin-bottom:10px;">
+      <h4 style="margin:0;">🛒 Venta Actual</h4>
+    </div>
+    <div class="acciones-top" style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; justify-content:flex-start; align-items:center;">
+      <button onclick="aplicarDescuento()" class="secondary" style="min-width:140px; width:auto; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px;">
+        <span style="font-size:22px;">🏷️</span>
+        <span>Aplicar descuento</span>
+      </button>
+      <button class="outline" disabled style="min-width:140px; width:auto; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px;">
+        <span style="font-size:22px;">👤</span>
+        <span id="usuario-actual-nombre">—</span>
+      </button>
+      <button onclick="cambiarUsuario()" class="secondary" style="min-width:140px; width:auto; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px;">
+        <span style="font-size:22px;">🔄</span>
+        <span>Cambiar usuario</span>
+      </button>
+      <input id="buscar-producto" placeholder="Buscar productos..." style="height:88px; padding:8px 12px; width:920px; margin-left:auto;">
     </div>
     <div class="grid grid-caja">
       
       <section>
         <article style="padding: 1rem; margin-bottom: 0;">
+            <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
+              <span style="font-size:0.9rem; color:#6b7280;">Tamaño panel</span>
+              <input type="range" id="panelSplit" min="35" max="75" value="63" style="flex:1;">
+              <span id="panelSplitVal" style="font-size:0.9rem; color:#6b7280;">63%</span>
+            </div>
  
             <div style="max-height: 350px; overflow-y: auto;">
                 <table id="tabla-venta">
-                  <header style="padding: 0.5rem 1rem; margin-bottom: 1rem;">
-                <h4 style="margin:0;">🛒 Venta Actual</h4>
-            </header>
                   <thead>
                     
                     <tr>
@@ -115,28 +130,17 @@
             </div>
 
             <div class="pago-card">
-                <div class="grid" style="align-items: end;">
-                    <div>
-                        <h6>Forma de Pago</h6>
-                        <div style="display:flex; gap:10px;">
-                            <button class="secondary btn-pago outline" onclick="seleccionarPago('efectivo')">💶 Efectivo</button>
-                            <button class="secondary btn-pago outline" onclick="seleccionarPago('tarjeta')">💳 Tarjeta</button>
-                        </div>
-                        <p style="margin:10px 0 0 0;">Seleccionado: <strong id="pago-seleccionado">—</strong></p>
-                    </div>
-
-                    <div id="bloque-efectivo" style="display:none;">
-                      <label style="margin-bottom:0;">Entregado (€)
-                        <input type="number" id="efectivo-entregado" step="0.01" oninput="calcularCambio()" placeholder="0.00" style="margin-bottom:0.5rem;">
-                      </label>
-                      <p style="margin:0;">Cambio: <strong id="cambio" style="color: green; font-size: 1.2rem;">0.00 €</strong></p>
-                    </div>
-
-                    <div>
-                        <button class="primary" onclick="guardarVenta()" style="width: 100%; height: 70px; font-size: 1.3rem; margin-bottom:0;">
-                            💾 COBRAR TICKET
-                        </button>
-                    </div>
+                <div class="pago-actions" style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+                    <button class="secondary btn-pago outline" onclick="seleccionarPago('efectivo')" style="flex:1; height:48px; font-size:1.05rem;">💶 Efectivo</button>
+                    <button class="secondary btn-pago outline" onclick="seleccionarPago('tarjeta')" style="flex:1; height:48px; font-size:1.05rem;">💳 Tarjeta</button>
+                    <button class="primary" onclick="guardarVenta()" style="flex:1; height:84px; font-size:1.3rem; margin: -6px 0;">💾 COBRAR TICKET</button>
+                </div>
+                <p style="margin:0 0 8px 0;">Seleccionado: <strong id="pago-seleccionado">—</strong></p>
+                <div id="bloque-efectivo" style="display:none;">
+                  <label style="margin-bottom:0;">Entregado (€)
+                    <input type="number" id="efectivo-entregado" step="0.01" oninput="calcularCambio()" placeholder="0.00" style="margin-bottom:0.5rem;">
+                  </label>
+                  <p style="margin:0;">Cambio: <strong id="cambio" style="color: green; font-size: 1.2rem;">0.00 €</strong></p>
                 </div>
             </div>
         </article>
@@ -153,11 +157,40 @@
     </div>
   </main>
 
+  <dialog id="post-cobro">
+    <article>
+      <header>
+        <h4 style="margin:0;">✅ Venta procesada</h4>
+      </header>
+      <p id="post-desc" style="margin-top:0.5rem;"></p>
+      <div class="grid" style="align-items:end;">
+        <label>
+          Número cliente (WhatsApp)
+          <input id="post-phone" placeholder="Ej: 34XXXXXXXXX">
+        </label>
+        <label>
+          Documento
+          <select id="post-doc-type">
+            <option value="ticket">Ticket</option>
+            <option value="factura">Factura</option>
+          </select>
+        </label>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+        <button onclick="postImprimirTicket()">🖨️ Imprimir ticket</button>
+        <button onclick="postImprimirFactura()">🖨️ Imprimir factura</button>
+        <button class="secondary" onclick="postEnviarWhatsApp()">📤 Mandar por WhatsApp</button>
+        <button class="secondary" onclick="postCerrar()">Cerrar</button>
+      </div>
+    </article>
+  </dialog>
+ 
   
 </div>
 
 <script src="js/topbar.js" type="module"></script>
 <script src="js/auth.js" type="module"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="js/caja.js" type="module"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -167,13 +200,15 @@
     if (!slider || !grid) return;
     function apply() {
       const v = Number(slider.value);
-      label.textContent = v + "%";
-      grid.style.gridTemplateColumns = v + "% " + (100 - v) + "%";
+      if (label) label.textContent = v + "%";
+      grid.style.display = "grid";
+      grid.style.gridTemplateColumns = `minmax(0, ${v}%) minmax(0, ${100 - v}%)`;
     }
     apply();
     slider.addEventListener("input", apply);
   });
 </script>
+
 
 </body>
 </html>
