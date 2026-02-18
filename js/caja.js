@@ -16,6 +16,8 @@ let categoriasLocal = [];
 let ultimoDocId = null;
 let ultimoDocData = null;
 let usuarioActualNombre = "—";
+let clientesPopup = [];
+let clienteSeleccionado = null;
 
 /* =========================
    ESTADO DE CAJA
@@ -136,18 +138,16 @@ function renderizarTabla() {
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  let subtotalGeneral = 0, totalIva = 0, totalRec = 0;
+  let subtotalGeneral = 0, totalIva = 0;
 
   ventaActual.forEach(i => {
     const pvpTotalFila = i.precio * i.cantidad;
-    const divisor = (i.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+    const divisor = 1.21;
     const baseFila = pvpTotalFila / divisor;
     const ivaFila = baseFila * 0.21;
-    const reFila = (i.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
 
     subtotalGeneral += baseFila;
     totalIva += ivaFila;
-    totalRec += reFila;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -168,10 +168,9 @@ function renderizarTabla() {
     tbody.appendChild(tr);
   });
 
-  const totalFinal = subtotalGeneral + totalIva + totalRec;
+  const totalFinal = subtotalGeneral + totalIva;
   document.getElementById("subtotal").innerText = subtotalGeneral.toFixed(2) + " €";
   document.getElementById("total-iva").innerText = totalIva.toFixed(2) + " €";
-  document.getElementById("total-recargo").innerText = totalRec.toFixed(2) + " €";
   document.getElementById("total-venta").innerText = totalFinal.toFixed(2) + " €";
   
   if (metodoPago === 'efectivo') calcularCambio();
@@ -239,6 +238,66 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+function renderResultadosClientes(list) {
+  const cont = document.getElementById("post-cli-resultados");
+  if (!cont) return;
+  cont.innerHTML = "";
+  list.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "outline";
+    btn.style = "margin:4px; display:flex; justify-content:space-between;";
+    btn.innerHTML = `<span>${c.nombre}</span><small>${c.movil || ""}</small>`;
+    btn.onclick = () => seleccionarCliente(c);
+    cont.appendChild(btn);
+  });
+}
+
+async function cargarClientesPopup() {
+  try {
+    const snap = await getDocs(collection(db, "clients"));
+    clientesPopup = [];
+    snap.forEach(d => {
+      const c = d.data();
+      clientesPopup.push({
+        id: d.id,
+        nombre: c.nombre || "",
+        movil: c.movil || "",
+        dni_nie: c.dni_nie || "",
+        cif: c.cif || "",
+        correo: c.correo || ""
+      });
+    });
+    renderResultadosClientes(clientesPopup);
+  } catch(e) {}
+}
+
+function filtrarClientesPopup() {
+  const campo = document.getElementById("post-cli-filter")?.value || "nombre";
+  const term = document.getElementById("post-cli-buscar")?.value.trim().toLowerCase() || "";
+  if (!term) { renderResultadosClientes(clientesPopup); return; }
+  const f = clientesPopup.filter(c => ((c[campo] || "").toLowerCase().includes(term)));
+  renderResultadosClientes(f);
+}
+
+function seleccionarCliente(c) {
+  clienteSeleccionado = c;
+  const el = document.getElementById("post-cli-seleccionado");
+  if (el) el.innerText = c.nombre;
+  if (!document.getElementById("post-phone").value && c.movil) {
+    document.getElementById("post-phone").value = c.movil;
+  }
+  if (ultimoDocId) {
+    updateDoc(doc(db, "sales", ultimoDocId), {
+      client_id: c.id,
+      client_nombre: c.nombre
+    });
+  }
+}
+
+window.abrirClientes = () => {
+  window.open("clientes.html", "_blank");
+};
 
 async function cargarUsuarioActual() {
   try {
@@ -315,7 +374,6 @@ window.guardarVenta = async () => {
       lineas: ventaActual,
       subtotal: parseFloat(document.getElementById("subtotal").innerText),
       total_iva: parseFloat(document.getElementById("total-iva").innerText),
-      total_recargo: parseFloat(document.getElementById("total-recargo").innerText),
       total: totalVenta,
       metodo_pago: metodoPago,
       caja_id: cajaActualId, // Vínculo para el Cierre Z
@@ -346,7 +404,14 @@ window.guardarVenta = async () => {
     const desc = document.getElementById("post-desc");
     const lineas = ultimoDocData.lineas.reduce((a,b)=>a + (b.cantidad || 1), 0);
     desc.innerText = `Venta ${num} · ${lineas} unidades · Total ${ultimoDocData.total.toFixed(2)} € (Base ${ultimoDocData.subtotal.toFixed(2)} €, IVA ${ultimoDocData.total_iva.toFixed(2)} €)`;
-    if (dlg?.showModal) dlg.showModal();
+    if (dlg?.showModal) {
+      dlg.showModal();
+      cargarClientesPopup();
+      const s = document.getElementById("post-cli-buscar");
+      const f = document.getElementById("post-cli-filter");
+      if (s) s.addEventListener("input", filtrarClientesPopup);
+      if (f) f.addEventListener("change", filtrarClientesPopup);
+    }
 
   } catch (err) {
     console.error("Error al guardar venta:", err);
@@ -361,11 +426,13 @@ window.postCerrar = () => {
 
 window.postImprimirTicket = () => {
   if (!ultimoDocId) return;
+  updateDoc(doc(db, "sales", ultimoDocId), { doc_type: "ticket" });
   window.open(`ticket.html?id=${ultimoDocId}`, "_blank");
 };
 
 window.postImprimirFactura = () => {
   if (!ultimoDocId) return;
+  updateDoc(doc(db, "sales", ultimoDocId), { doc_type: "factura" });
   window.open(`factura.html?id=${ultimoDocId}`, "_blank");
 };
 

@@ -63,6 +63,35 @@ async function cargarFactura() {
     document.getElementById("metodo-pago").innerText = 
         f.metodo_pago === "efectivo" ? "Efectivo" : "Tarjeta";
 
+    // CLIENTE/EMPRESA
+    try {
+        let c = null;
+        let nombreCliente = f.client_nombre || "";
+
+        if (f.client_id) {
+            const cliSnap = await getDoc(doc(db, "clients", f.client_id));
+            if (cliSnap.exists()) c = cliSnap.data();
+        } else if (f.ticket_id) {
+            const saleSnap = await getDoc(doc(db, "sales", f.ticket_id));
+            if (saleSnap.exists()) {
+                const s = saleSnap.data();
+                nombreCliente = s.client_nombre || nombreCliente;
+                if (s.client_id) {
+                    const cliSnap = await getDoc(doc(db, "clients", s.client_id));
+                    if (cliSnap.exists()) c = cliSnap.data();
+                }
+            }
+        }
+
+        document.getElementById("cliente-nombre").innerText = c?.nombre || nombreCliente || "";
+        document.getElementById("cliente-razon").innerText = c?.razon || "";
+        document.getElementById("cliente-cif").innerText = c?.cif || "";
+        document.getElementById("cliente-dni").innerText = c?.dni_nie || "";
+        document.getElementById("cliente-direccion").innerText = c?.direccion || "";
+        document.getElementById("cliente-movil").innerText = c?.movil || "";
+        document.getElementById("cliente-correo").innerText = c?.correo || "";
+    } catch(e) {}
+
     /* =========================
        LÍNEAS Y DESGLOSE
     ========================= */
@@ -81,10 +110,10 @@ async function cargarFactura() {
         const pvpTotalFila = pvpUnitario * cantidad;
 
         // Cálculo de impuestos por línea (Regla de Oro Fiscal)
-        const divisor = (l.tipoFiscal === "IVA_RE") ? 1.262 : 1.21;
+        const divisor = 1.21;
         const baseFila = pvpTotalFila / divisor;
         const ivaFila = baseFila * 0.21;
-        const reFila = (l.tipoFiscal === "IVA_RE") ? (baseFila * 0.052) : 0;
+        const reFila = 0;
 
         acumuladoSubtotal += baseFila;
         acumuladoIva += ivaFila;
@@ -101,11 +130,11 @@ async function cargarFactura() {
     });
 
     // Totales finales
-    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva + acumuladoRecargo);
+    const totalFinal = f.total || (acumuladoSubtotal + acumuladoIva);
     
     document.getElementById("subtotal").innerText = acumuladoSubtotal.toFixed(2) + " €";
     document.getElementById("iva").innerText = acumuladoIva.toFixed(2) + " €";
-    document.getElementById("recargo").innerText = acumuladoRecargo.toFixed(2) + " €";
+    // Sin recargo de equivalencia
     document.getElementById("total").innerText = totalFinal.toFixed(2) + " €";
 
     /* =========================

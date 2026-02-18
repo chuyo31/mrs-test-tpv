@@ -76,6 +76,10 @@
         <span style="font-size:22px;">🏷️</span>
         <span>Aplicar descuento</span>
       </button>
+      <button onclick="window.location.href='clientes.html'" class="secondary" style="min-width:140px; width:auto; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px;">
+        <span style="font-size:22px;">🧑‍🤝‍🧑</span>
+        <span>Clientes</span>
+      </button>
       <button class="outline" disabled style="min-width:140px; width:auto; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px;">
         <span style="font-size:22px;">👤</span>
         <span id="usuario-actual-nombre">—</span>
@@ -84,7 +88,7 @@
         <span style="font-size:22px;">🔄</span>
         <span>Cambiar usuario</span>
       </button>
-      <input id="buscar-producto" placeholder="Buscar productos..." style="height:88px; padding:8px 12px; width:920px; margin-left:auto;">
+      <input id="buscar-producto" placeholder="Buscar productos..." style="height:88px; padding:8px 12px; width:540px; margin-left:auto;">
     </div>
     <div class="grid grid-caja">
       
@@ -119,9 +123,6 @@
                 </div>
                 <div style="display:flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
                     <span>IVA (21%):</span> <span id="total-iva">0.00 €</span>
-                </div>
-                <div style="display:flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
-                    <span>Recargo RE:</span> <span id="total-recargo">0.00 €</span>
                 </div>
                 <hr>
                 <div style="display:flex; justify-content: space-between; font-size: 1.6rem;">
@@ -175,6 +176,21 @@
             <option value="factura">Factura</option>
           </select>
         </label>
+      </div>
+      <div style="margin-top:10px;">
+        <label>Cliente</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select id="post-cli-filter">
+            <option value="nombre">Nombre</option>
+            <option value="movil">Móvil</option>
+            <option value="dni_nie">DNI/NIE</option>
+            <option value="cif">CIF</option>
+          </select>
+          <input id="post-cli-buscar" placeholder="Buscar cliente...">
+          <button class="outline" onclick="abrirClientes()">Abrir módulo</button>
+        </div>
+        <div id="post-cli-resultados" style="max-height:160px; overflow:auto; margin-top:6px;"></div>
+        <small>Seleccionado: <strong id="post-cli-seleccionado">—</strong></small>
       </div>
       <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
         <button onclick="postImprimirTicket()">🖨️ Imprimir ticket</button>

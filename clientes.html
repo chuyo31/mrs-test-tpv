@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <title>MRS TPV · Clientes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <div id="topbar-app"></div>
+  <main class="container" style="margin-top: 1rem;">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <h3 style="margin:0;">🧑‍🤝‍🧑 Clientes</h3>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="btn-form-cliente" class="secondary" onclick="switchForm('cliente')">Cliente</button>
+          <button id="btn-form-empresa" class="secondary outline" onclick="switchForm('empresa')">Empresa</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select id="cliente-filter-campo" style="height:40px;">
+          <option value="nombre">Nombre</option>
+          <option value="movil">Móvil</option>
+          <option value="dni_nie">DNI/NIE</option>
+          <option value="cif">CIF</option>
+        </select>
+        <input id="cliente-buscar" placeholder="Buscar..." style="width:320px; height:40px;">
+      </div>
+    </header>
+
+    <section style="margin-bottom: 1rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Móvil</th>
+            <th>DNI/NIE</th>
+            <th>CIF</th>
+            <th>Razón Social</th>
+            <th>Correo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="clientes-body"></tbody>
+      </table>
+    </section>
+
+    <input type="hidden" id="edit-id">
+    <input type="hidden" id="edit-tipo">
+
+    <section id="form-cliente">
+      <article>
+        <header><h4 style="margin:0;">Cliente</h4></header>
+        <div class="grid">
+          <label>Nombre<input id="cli-nombre" placeholder="Nombre" required></label>
+          <label>DNI/NIE<input id="cli-dni" placeholder="DNI/NIE"></label>
+          <label>Móvil<input id="cli-movil" placeholder="Ej: 34XXXXXXXXX" required></label>
+          <label>Correo<input id="cli-correo" type="email" placeholder="correo@dominio.com"></label>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="primary" onclick="guardarCliente()">💾 Guardar</button>
+          <button class="secondary" onclick="limpiarFormCliente()">Limpiar</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="form-empresa" style="display:none;">
+      <article>
+        <header><h4 style="margin:0;">Empresa</h4></header>
+        <div class="grid">
+          <label>Nombre<input id="emp-nombre" placeholder="Nombre" required></label>
+          <label>Razón Social<input id="emp-razon" placeholder="Razón social"></label>
+          <label>CIF<input id="emp-cif" placeholder="CIF/NIF"></label>
+          <label>Dirección<input id="emp-direccion" placeholder="Dirección completa"></label>
+          <label>Móvil<input id="emp-movil" placeholder="Ej: 34XXXXXXXXX" required></label>
+          <label>Correo<input id="emp-correo" type="email" placeholder="correo@dominio.com"></label>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="primary" onclick="guardarCliente()">💾 Guardar</button>
+          <button class="secondary" onclick="limpiarFormCliente()">Limpiar</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="js/topbar.js" type="module"></script>
+  <script src="js/clientes.js" type="module"></script>
+</body>
+</html>

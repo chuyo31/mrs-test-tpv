@@ -9,13 +9,12 @@ window.guardarProducto = async function() {
     // 1. Buscamos la familia para saber su fiscalidad
     // (Asumimos que 'categoriasLocal' es un array con tus categorías de Firestore)
     const familia = categoriasLocal.find(c => c.id === catId);
-    const tieneRE = familia.tipoFiscal === "IVA_RE";
 
     // 2. APLICAMOS LA PRUEBA (DESGLOSE LEGAL)
-    const divisor = tieneRE ? 1.262 : 1.21;
+    const divisor = 1.21;
     const baseImponible = pvp / divisor;
     const cuotaIVA = baseImponible * 0.21;
-    const cuotaRE = tieneRE ? (baseImponible * 0.052) : 0;
+    const cuotaRE = 0;
 
     // 3. Subida de imagen (Opcional)
     let imgUrl = "";
@@ -32,7 +31,7 @@ window.guardarProducto = async function() {
         base_imponible: Number(baseImponible.toFixed(4)), // Guardamos con precisión para evitar errores
         tipo_iva: 21,
         cuota_iva: Number(cuotaIVA.toFixed(4)),
-        tipo_re: tieneRE ? 5.2 : 0,
+        tipo_re: 0,
         cuota_re: Number(cuotaRE.toFixed(4)),
         imagen_url: imgUrl,
         categoria_id: catId,

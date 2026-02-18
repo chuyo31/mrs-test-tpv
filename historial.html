@@ -25,6 +25,12 @@
 <main class="container">
   <h3>Historial de ventas</h3>
 
+  <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+    <input id="hist-buscar" placeholder="Buscar (número, cliente, pago, estado)" style="flex:1; min-width:260px;">
+    <button id="btn-mostrar-5" class="secondary">Mostrar 5</button>
+    <button id="btn-mostrar-todo" class="secondary">Mostrar todo</button>
+  </div>
+
   <div style="overflow-x: auto;">
     <table>
       <thead>
@@ -40,6 +46,28 @@
       <tbody id="lista-ventas"></tbody>
     </table>
   </div>
+
+  <dialog id="dlg-asignar-cliente">
+    <article>
+      <header>
+        <h4 style="margin:0;">Asignar Cliente</h4>
+      </header>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+        <select id="asig-cli-filter">
+          <option value="nombre">Nombre</option>
+          <option value="movil">Móvil</option>
+          <option value="dni_nie">DNI/NIE</option>
+          <option value="cif">CIF</option>
+        </select>
+        <input id="asig-cli-buscar" placeholder="Buscar cliente...">
+        <button class="outline" onclick="abrirModuloClientes()">Abrir módulo</button>
+      </div>
+      <div id="asig-cli-resultados" style="max-height:220px; overflow:auto; border:1px solid #e2e8f0; border-radius:8px; padding:6px;"></div>
+      <footer style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+        <button class="secondary" onclick="cerrarAsignarCliente()">Cancelar</button>
+      </footer>
+    </article>
+  </dialog>
 </main>
 
 <script src="js/topbar.js" type="module"></script>

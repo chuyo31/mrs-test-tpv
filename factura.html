@@ -27,6 +27,7 @@
     .empresa div { color: #666; font-size: 11px; margin-top: 5px; }
 
     .factura-info { text-align: right; }
+    .cliente-info { text-align: right; }
     .factura-info h1 { margin: 0; font-size: 28px; color: #000; font-weight: 300; }
     .info-box { background: #f8fafc; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #e2e8f0; }
 
@@ -69,14 +70,23 @@
       <div id="empresa-datos"></div>
     </div>
 
-    <div class="factura-info">
-      <h1>FACTURA</h1>
+    <div class="cliente-info">
+      <h1>CLIENTE</h1>
       <div class="info-box">
-        <strong>Nº:</strong> <span id="factura-numero"></span><br>
-        <strong>Fecha:</strong> <span id="factura-fecha"></span><br>
-        <strong>Pago:</strong> <span id="metodo-pago"></span>
+        <strong>Nombre:</strong> <span id="cliente-nombre"></span><br>
+        <strong>Razón Social:</strong> <span id="cliente-razon"></span><br>
+        <strong>CIF:</strong> <span id="cliente-cif"></span><br>
+        <strong>DNI/NIE:</strong> <span id="cliente-dni"></span><br>
+        <strong>Dirección:</strong> <span id="cliente-direccion"></span><br>
+        <strong>Móvil:</strong> <span id="cliente-movil"></span><br>
+        <strong>Correo:</strong> <span id="cliente-correo"></span>
       </div>
     </div>
+  </div>
+  <div class="info-box" style="margin-top: 10px;">
+    <strong>Nº:</strong> <span id="factura-numero"></span> · 
+    <strong>Fecha:</strong> <span id="factura-fecha"></span> · 
+    <strong>Pago:</strong> <span id="metodo-pago"></span>
   </div>
 
   <table>
@@ -102,8 +112,6 @@
         <td class="right" id="iva"></td>
       </tr>
       <tr>
-        <td>Recargo RE</td>
-        <td class="right" id="recargo"></td>
       </tr>
       <tr class="total-row">
         <td>TOTAL</td>
